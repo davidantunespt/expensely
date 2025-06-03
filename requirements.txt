@@ -1,0 +1,117 @@
+# Smart Receipt & Expense Tracker for Freelancers
+
+## Application Goal
+Smart Receipt & Expense Tracker for Freelancers
+
+## Target Market
+Freelancers and gig workers
+
+## Value Proposition
+- Auto-categorize expenses
+- Generate tax summaries
+- Streamline invoicing
+
+## Subscription Tier Ideas
+- Based on expense volume
+- Access to integrations
+- Detailed tax reports
+
+## Application Map
+
+### 1. 🏠 Dashboard
+#### Overview Widgets
+- Total monthly expenses
+- Tax-deductible summary
+- Recent transactions
+- Upload receipt quick action
+
+#### Graphs/Charts
+- Monthly expense trend
+- Category breakdown (pie chart)
+- Estimated quarterly tax
+
+### 2. 📸 Receipt Upload
+#### Input Methods
+- Camera capture (mobile)
+- Upload from file system
+- Forward from email
+- Drag & drop (web)
+
+#### OCR & AI Parsing
+- Extract vendor name, amount, date, category
+- Detect duplicates
+
+#### Manual Edit UI
+- Confirm/edit parsed fields
+- Assign tags or projects
+- Mark as reimbursable or billable
+
+### 3. 📂 Expense Management
+#### Expense List View
+- Filter by category, project, date range
+- Sortable table (amount, vendor, date)
+
+#### Expense Details Page
+- Receipt image preview
+- Parsed fields
+- Audit trail / notes
+
+#### Bulk Actions
+- Categorize, delete, export
+
+### 4. 🧾 Invoicing & Billable Tracking
+#### Project Assignment
+- Link expenses to projects/clients
+
+#### Billable Tag
+- Mark expenses as billable
+
+#### Invoice Integration
+- Export billable expenses to PDF invoice
+- Optional integration: QuickBooks, Stripe
+
+### 5. 📊 Tax & Reports
+#### Tax Report Generator
+- Export tax-deductible items (CSV/PDF)
+- Categorized totals
+- Quarterly tax estimator
+
+#### Custom Reports
+- By vendor, project, month, category
+- Recurring expense summaries
+
+### 6. 🔧 Settings & Profile
+#### User Profile
+- Name, freelancer type, country (for tax rules)
+
+#### Tax Settings
+- Deduction rules
+- Quarterly tax thresholds
+
+#### Integrations
+- Accounting tools (Xero, FreshBooks)
+- Email forwarding (Gmail, Outlook)
+- Cloud storage (Google Drive, Dropbox)
+
+### 7. 🔔 Notifications
+#### Reminders
+- Upload receipts weekly
+- Quarterly tax due dates
+
+#### Smart Suggestions
+- "You've spent more in 'Travel' this month"
+- "You may have forgotten to categorize 3 items"
+
+### 8. 👥 Subscription & Billing
+#### Plan Management
+- Free tier: X receipts/month
+- Pro: unlimited, tax tools, cloud sync
+
+#### Billing History
+- Invoices and receipts for own subscription
+- Upgrade/Downgrade Options
+
+### 9. 💬 Help Center / Support
+- FAQs
+- Live Chat or Ticketing
+- Tutorial Videos (e.g., "Scan your first receipt")
