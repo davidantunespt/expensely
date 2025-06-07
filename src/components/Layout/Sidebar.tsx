@@ -115,10 +115,10 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group ${
+              className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group border ${
                 isActive 
-                  ? 'text-gray-900 border' 
-                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+                  ? 'text-gray-900' 
+                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900 border-transparent'
               }`}
               style={isActive ? { backgroundColor: '#f5f5f4', borderColor: '#ededed' } : undefined}
               title={isCollapsed ? item.name : undefined}
@@ -148,10 +148,10 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group ${
+              className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group border ${
                 isActive 
-                  ? 'text-gray-900 border' 
-                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+                  ? 'text-gray-900' 
+                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900 border-transparent'
               }`}
               style={isActive ? { backgroundColor: '#f5f5f4', borderColor: '#ededed' } : undefined}
               title={isCollapsed ? item.name : undefined}

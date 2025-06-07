@@ -46,6 +46,16 @@ export const receiptProcessingResponseSchema = z.object({
   extractedAt: z.string(), // ISO timestamp
 });
 
+export const qrCodeReaderResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.array(
+    z.object({
+      data: z.string(),
+      imagePath: z.string(),
+    })
+  ),
+});
+
 // File upload schema
 export const fileUploadSchema = z.object({
   file: z.instanceof(File, { message: "Valid file is required" }),

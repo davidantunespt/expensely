@@ -12,6 +12,8 @@ interface ProcessedFile {
   data: ReceiptData;
   isReviewed: boolean;
   isCollapsed: boolean;
+  isCollapsing?: boolean;
+  isDiscarding?: boolean;
 }
 
 export default function UploadReceipt() {
@@ -44,7 +46,7 @@ export default function UploadReceipt() {
     );
   };
 
-  const handleDiscard = (fileId: string) => {
+  const handleDiscardProcessedFile = (fileId: string) => {
     // Remove from processed files
     setProcessedFiles(prev => prev.filter(file => file.fileId !== fileId));
     
@@ -89,15 +91,59 @@ export default function UploadReceipt() {
         <FileUploadArea onFileProcessed={handleFileProcessed} ref={fileUploadAreaRef} />
       </div>
 
+      {/* Three-Step Flow Guide - Only shows when no files are processed */}
+      {processedFiles.length === 0 && (
+        <div className="mb-4">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">How it works</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Step 1 */}
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl font-bold text-blue-600">1</span>
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-2">Upload & Process</h4>
+                <p className="text-sm text-gray-600">
+                  Upload your receipt files and let our AI extract the data automatically
+                </p>
+              </div>
+
+              {/* Step 2 */}
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl font-bold text-green-600">2</span>
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-2">Review & Edit</h4>
+                <p className="text-sm text-gray-600">
+                  Review the extracted data and make any necessary corrections
+                </p>
+              </div>
+
+              {/* Step 3 */}
+              <div className="text-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl font-bold text-purple-600">3</span>
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-2">Save!</h4>
+                <p className="text-sm text-gray-600">
+                  Mark receipts as reviewed and save them to your expense tracker
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Receipt Data Display - Only shows when files are processed */}
       {processedFiles.length > 0 && (
         <div className="mb-4">
           <ReceiptDataDisplay 
             processedFiles={processedFiles}
             onFileUpdated={handleFileUpdated}
-            onDiscard={handleDiscard}
+            onDiscard={handleDiscardProcessedFile}
             onBulkSave={handleBulkSave}
             isSaving={isSaving}
+            setProcessedFiles={setProcessedFiles}
           />
         </div>
       )}

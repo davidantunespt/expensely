@@ -11,6 +11,8 @@ interface ProcessedFile {
   data: ReceiptData;
   isReviewed: boolean;
   isCollapsed: boolean;
+  isCollapsing?: boolean;
+  isDiscarding?: boolean;
 }
 
 interface ReceiptDataDisplayProps {
@@ -19,9 +21,10 @@ interface ReceiptDataDisplayProps {
   onDiscard: (fileId: string) => void;
   onBulkSave: () => void;
   isSaving: boolean;
+  setProcessedFiles: React.Dispatch<React.SetStateAction<ProcessedFile[]>>;
 }
 
-export function ReceiptDataDisplay({ processedFiles, onFileUpdated, onDiscard, onBulkSave, isSaving }: ReceiptDataDisplayProps) {
+export function ReceiptDataDisplay({ processedFiles, onFileUpdated, onDiscard, onBulkSave, isSaving, setProcessedFiles }: ReceiptDataDisplayProps) {
   const [editingFileId, setEditingFileId] = useState<string | null>(null);
   const [editData, setEditData] = useState<ReceiptData | null>(null);
 
@@ -53,10 +56,19 @@ export function ReceiptDataDisplay({ processedFiles, onFileUpdated, onDiscard, o
   };
 
   const handleMarkAsReviewed = (fileId: string) => {
+    // First mark as reviewed and start collapsing
     onFileUpdated(fileId, { 
       isReviewed: true, 
-      isCollapsed: true 
+      isCollapsing: true 
     });
+    
+    // Complete the collapse after 1 second
+    setTimeout(() => {
+      onFileUpdated(fileId, { 
+        isCollapsed: true, 
+        isCollapsing: false 
+      });
+    }, 1000);
   };
 
   const handleToggleCollapse = (fileId: string, currentCollapsed: boolean) => {
@@ -64,14 +76,25 @@ export function ReceiptDataDisplay({ processedFiles, onFileUpdated, onDiscard, o
   };
 
   const handleDiscard = (fileId: string) => {
-    // Call parent's discard handler which will remove from processed files and update file status
-    onDiscard(fileId);
-    
+    // First, set isDiscarding to true to trigger animation
+    setProcessedFiles(prev => 
+      prev.map(file => 
+        file.fileId === fileId 
+          ? { ...file, isDiscarding: true }
+          : file
+      )
+    );
+
     // Clear editing state if this file was being edited
     if (editingFileId === fileId) {
       setEditingFileId(null);
       setEditData(null);
     }
+
+    // After animation completes (1 second), actually remove the file
+    setTimeout(() => {
+      onDiscard(fileId);
+    }, 1000);
   };
 
   const categories = [
@@ -101,12 +124,16 @@ export function ReceiptDataDisplay({ processedFiles, onFileUpdated, onDiscard, o
       </div>
       
       {processedFiles.map((processedFile) => {
-        const { fileId, fileName, data: receiptData, isReviewed, isCollapsed } = processedFile;
+        const { fileId, fileName, data: receiptData, isReviewed, isCollapsed, isCollapsing, isDiscarding } = processedFile;
         const isEditing = editingFileId === fileId;
         const currentData = isEditing ? editData! : receiptData;
 
         return (
-          <Box key={fileId}>
+          <Box key={fileId} className={`transition-all duration-1000 ease-in-out overflow-hidden ${
+            isDiscarding 
+              ? 'max-h-0 opacity-0' 
+              : 'max-h-[2000px] opacity-100'
+          }`} style={{ backgroundColor: 'white' }}>
             {/* Header - Always Visible */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -136,7 +163,7 @@ export function ReceiptDataDisplay({ processedFiles, onFileUpdated, onDiscard, o
                 </div>
               </div>
               
-              {!isCollapsed && (
+              {!isCollapsed && !isCollapsing && !isDiscarding && (
                 <div className="flex items-center space-x-3">
                   {isEditing ? (
                     <>
@@ -169,10 +196,18 @@ export function ReceiptDataDisplay({ processedFiles, onFileUpdated, onDiscard, o
             </div>
 
             {/* Expandable Content */}
-            {!isCollapsed && (
-              <>
+            <div className={`overflow-hidden transition-all duration-1000 ease-in-out ${
+              isCollapsed 
+                ? 'max-h-0 opacity-0' 
+                : isCollapsing 
+                  ? 'max-h-0 opacity-0' 
+                  : isDiscarding
+                    ? 'max-h-0 opacity-0'
+                    : 'max-h-[2000px] opacity-100'
+            }`}>
+              <div className="pt-4">
                 {/* Extraction Status */}
-                <div className="flex items-center mb-6 p-3 bg-green-50 border border-green-200 rounded-lg mt-4">
+                <div className="flex items-center mb-6 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
                   <div>
                     <p className="text-base font-medium text-green-900">Data Extracted Successfully</p>
@@ -181,10 +216,10 @@ export function ReceiptDataDisplay({ processedFiles, onFileUpdated, onDiscard, o
                 </div>
 
                 {/* Receipt Data Form */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Vendor */}
-                  <div>
-                    <label className="block text-base font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
                       Vendor Name
                     </label>
                     {isEditing ? (
@@ -192,16 +227,19 @@ export function ReceiptDataDisplay({ processedFiles, onFileUpdated, onDiscard, o
                         type="text"
                         value={currentData.vendor}
                         onChange={(e) => handleInputChange('vendor', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900 placeholder-gray-400"
+                        placeholder="Enter vendor name"
                       />
                     ) : (
-                      <p className="text-base text-gray-900 py-2">{currentData.vendor}</p>
+                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg">
+                        <p className="text-gray-900 font-medium">{currentData.vendor}</p>
+                      </div>
                     )}
                   </div>
 
                   {/* Date */}
-                  <div>
-                    <label className="block text-base font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
                       Date
                     </label>
                     {isEditing ? (
@@ -209,140 +247,171 @@ export function ReceiptDataDisplay({ processedFiles, onFileUpdated, onDiscard, o
                         type="date"
                         value={currentData.date}
                         onChange={(e) => handleInputChange('date', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900"
                       />
                     ) : (
-                      <p className="text-base text-gray-900 py-2">
-                        {new Date(currentData.date).toLocaleDateString()}
-                      </p>
+                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg">
+                        <p className="text-gray-900 font-medium">
+                          {new Date(currentData.date).toLocaleDateString()}
+                        </p>
+                      </div>
                     )}
                   </div>
 
                   {/* Amount */}
-                  <div>
-                    <label className="block text-base font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
                       Amount
                     </label>
                     {isEditing ? (
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={currentData.amount}
-                        onChange={(e) => handleInputChange('amount', parseFloat(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                      />
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={currentData.amount}
+                          onChange={(e) => handleInputChange('amount', parseFloat(e.target.value))}
+                          className="w-full pl-8 pr-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900 placeholder-gray-400"
+                          placeholder="0.00"
+                        />
+                      </div>
                     ) : (
-                      <p className="text-base text-gray-900 py-2">
-                        ${currentData.amount.toFixed(2)}
-                      </p>
+                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg">
+                        <p className="text-gray-900 font-medium text-lg">
+                          ${currentData.amount.toFixed(2)}
+                        </p>
+                      </div>
                     )}
                   </div>
 
                   {/* Category */}
-                  <div>
-                    <label className="block text-base font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
                       Category
                     </label>
                     {isEditing ? (
                       <select
                         value={currentData.category}
                         onChange={(e) => handleInputChange('category', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900 appearance-none cursor-pointer"
                       >
                         {categories.map((category) => (
                           <option key={category} value={category}>{category}</option>
                         ))}
                       </select>
                     ) : (
-                      <p className="text-base text-gray-900 py-2">{currentData.category}</p>
+                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg">
+                        <p className="text-gray-900 font-medium">{currentData.category}</p>
+                      </div>
                     )}
                   </div>
 
                   {/* Payment Method */}
-                  <div>
-                    <label className="block text-base font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
                       Payment Method
                     </label>
                     {isEditing ? (
                       <select
                         value={currentData.paymentMethod}
                         onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900 appearance-none cursor-pointer"
                       >
                         {paymentMethods.map((method) => (
                           <option key={method} value={method}>{method}</option>
                         ))}
                       </select>
                     ) : (
-                      <p className="text-base text-gray-900 py-2">{currentData.paymentMethod}</p>
+                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg">
+                        <p className="text-gray-900 font-medium">{currentData.paymentMethod}</p>
+                      </div>
                     )}
                   </div>
 
                   {/* Tax Amount */}
-                  <div>
-                    <label className="block text-base font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
                       Tax Amount
                     </label>
                     {isEditing ? (
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={currentData.taxAmount || 0}
-                        onChange={(e) => handleInputChange('taxAmount', parseFloat(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                      />
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={currentData.taxAmount || 0}
+                          onChange={(e) => handleInputChange('taxAmount', parseFloat(e.target.value))}
+                          className="w-full pl-8 pr-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900 placeholder-gray-400"
+                          placeholder="0.00"
+                        />
+                      </div>
                     ) : (
-                      <p className="text-base text-gray-900 py-2">
-                        ${currentData.taxAmount?.toFixed(2) || '0.00'}
-                      </p>
+                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg">
+                        <p className="text-gray-900 font-medium">
+                          ${currentData.taxAmount?.toFixed(2) || '0.00'}
+                        </p>
+                      </div>
                     )}
                   </div>
 
                   {/* Description - Full Width */}
-                  <div className="md:col-span-2">
-                    <label className="block text-base font-medium text-gray-700 mb-2">
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
                       Description
                     </label>
                     {isEditing ? (
                       <textarea
                         value={currentData.description}
                         onChange={(e) => handleInputChange('description', e.target.value)}
-                        rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                        rows={4}
+                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900 placeholder-gray-400 resize-none"
+                        placeholder="Enter a description for this expense"
                       />
                     ) : (
-                      <p className="text-base text-gray-900 py-2">{currentData.description}</p>
+                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg min-h-[100px]">
+                        <p className="text-gray-900 font-medium leading-relaxed">{currentData.description}</p>
+                      </div>
                     )}
                   </div>
 
                   {/* Tax Deductible - Full Width */}
-                  <div className="md:col-span-2">
-                    <label className="flex items-center space-x-3">
+                  <div className="md:col-span-2 space-y-3">
+                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
+                      Tax Status
+                    </label>
+                    <div className="flex items-center space-x-3 p-4 bg-gray-50 border-2 border-gray-100 rounded-lg">
                       {isEditing ? (
                         <input
                           type="checkbox"
                           checked={currentData.isDeductible}
                           onChange={(e) => handleInputChange('isDeductible', e.target.checked)}
-                          className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500"
+                          className="w-5 h-5 text-gray-600 border-2 border-gray-300 rounded focus:border-gray-400 focus:ring-0 cursor-pointer"
                         />
                       ) : (
-                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                          currentData.isDeductible ? 'bg-gray-600 border-gray-600' : 'border-gray-300'
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                          currentData.isDeductible 
+                            ? 'bg-gray-600 border-gray-600' 
+                            : 'bg-white border-gray-300'
                         }`}>
                           {currentData.isDeductible && (
                             <CheckCircle className="w-3 h-3 text-white" />
                           )}
                         </div>
                       )}
-                      <span className="text-base font-medium text-gray-700">
-                        This expense is tax deductible
-                      </span>
-                    </label>
+                      <div className="flex-1">
+                        <span className="text-gray-900 font-medium">
+                          This expense is tax deductible
+                        </span>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Check this box if this expense can be claimed as a business deduction
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                {!isEditing && (
+                {!isEditing && !isDiscarding && (
                   <div className="mt-6 pt-4 border-t border-gray-300 flex justify-end space-x-3">
                     <button 
                       onClick={() => handleDiscard(fileId)}
@@ -369,15 +438,15 @@ export function ReceiptDataDisplay({ processedFiles, onFileUpdated, onDiscard, o
                     )}
                   </div>
                 )}
-              </>
-            )}
+              </div>
+            </div>
           </Box>
         );
       })}
 
       {/* Bulk Save Button */}
       {processedFiles.length > 0 && (
-        <Box>
+        <Box style={{ backgroundColor: 'white' }}>
           <div className="text-center py-6">
             <div className="mb-4">
               <h4 className="text-lg font-semibold text-gray-900 mb-2">Ready to Save</h4>

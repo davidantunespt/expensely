@@ -154,3 +154,46 @@ export function validateAndNormalizeReceiptData(
     taxAmount,
   };
 }
+
+/**
+ * Scans a receipt file using external OCR API
+ * @param file - The receipt file to scan
+ * @returns Promise with the OCR scan response
+ */
+interface QRCodeReaderResult {
+  results: Array<{
+    data: string;
+    imagePath: string;
+  }>;
+}
+
+export async function scanReceiptQRCode(
+  file: File
+): Promise<QRCodeReaderResult> {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("https://qrcode.usados.top/scan", {
+      method: "POST",
+      headers: {
+        Authorization: "Basic " + btoa("admin:pyOsLs8fFGv3P2p"),
+      },
+      body: formData,
+      redirect: "follow",
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `OCR scan failed with status: ${response.status} - ${response.statusText}`
+      );
+    }
+
+    const data = await response.json();
+
+    return data;
+  } catch (error) {
+    console.error("Error scanning receipt:", error);
+    throw new Error("Failed to scan receipt file");
+  }
+}
