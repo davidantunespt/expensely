@@ -42,7 +42,8 @@ export const mockExpenses: Expense[] = [
     description: "Hotel stay for client meeting",
     isDeductible: true,
     isBillable: true,
-    receiptUrl: "/receipts/hotel.jpg",
+    receiptUrl:
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=60",
   },
   {
     id: "2",
@@ -53,6 +54,8 @@ export const mockExpenses: Expense[] = [
     description: "Parking for client visit",
     isDeductible: true,
     isBillable: true,
+    receiptUrl:
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=60",
   },
   {
     id: "3",
@@ -63,6 +66,8 @@ export const mockExpenses: Expense[] = [
     description: "Business lunch meeting",
     isDeductible: true,
     isBillable: false,
+    receiptUrl:
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=60",
   },
   {
     id: "4",
@@ -73,6 +78,8 @@ export const mockExpenses: Expense[] = [
     description: "Printer paper and supplies",
     isDeductible: true,
     isBillable: false,
+    receiptUrl:
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=60",
   },
   {
     id: "5",
@@ -83,6 +90,8 @@ export const mockExpenses: Expense[] = [
     description: "Monthly subscription",
     isDeductible: true,
     isBillable: false,
+    receiptUrl:
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=60",
   },
 ];
 

@@ -29,7 +29,7 @@ interface UploadedFile {
   size: number;
   type: string;
   file: File;
-  status: "uploaded" | "processing" | "processed" | "rejected" | "error";
+  status: "uploaded" | "processing" | "processed" | "error" | "rejected";
   progress?: number;
   preview?: string;
   showSuccessButton?: boolean;
@@ -39,16 +39,19 @@ interface UploadedFile {
 interface FileUploadAreaProps {
   onFileProcessed: (fileId: string, extractedData: ReceiptData) => void;
   onFileStatusUpdate?: (fileId: string, status: UploadedFile["status"]) => void;
+  accept?: string;
+  maxSize?: number;
 }
 
 export interface FileUploadAreaRef {
   updateFileStatus: (fileId: string, status: UploadedFile["status"]) => void;
+  getFile: (fileId: string) => UploadedFile | undefined;
 }
 
 export const FileUploadArea = forwardRef<
   FileUploadAreaRef,
   FileUploadAreaProps
->(({ onFileProcessed, onFileStatusUpdate }, ref) => {
+>(({ onFileProcessed, onFileStatusUpdate, accept = "image/jpeg,image/png,application/pdf", maxSize = 10 * 1024 * 1024 }, ref) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [viewingImage, setViewingImage] = useState<{
@@ -108,6 +111,20 @@ export const FileUploadArea = forwardRef<
 
   const handleFiles = useCallback(async (files: File[]) => {
     for (const file of files) {
+      // Validate file size
+      if (file.size > maxSize) {
+        console.error(`File ${file.name} is too large. Maximum size is ${maxSize} bytes.`);
+        continue;
+      }
+
+      // Validate file type
+      const fileType = file.type.toLowerCase();
+      const acceptedTypes = accept.split(',').map(type => type.trim());
+      if (!acceptedTypes.some(type => fileType === type)) {
+        console.error(`File ${file.name} has an invalid type. Accepted types are: ${accept}`);
+        continue;
+      }
+
       const preview = await createFilePreview(file);
 
       const newFile: UploadedFile = {
@@ -122,7 +139,7 @@ export const FileUploadArea = forwardRef<
 
       setUploadedFiles((prev) => [...prev, newFile]);
     }
-  }, []);
+  }, [accept, maxSize]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -161,49 +178,72 @@ export const FileUploadArea = forwardRef<
       )
     );
 
-    // Simulate processing with progress
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 25;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
+    try {
+      // Get the file from uploaded files
+      const fileToProcess = uploadedFiles.find(file => file.id === fileId);
+      if (!fileToProcess) {
+        throw new Error('File not found');
+      }
 
-        // Mock extracted data
-        const mockExtractedData: ReceiptData = {
-          vendor: "Sample Vendor",
-          date: "2024-01-15",
-          amount: 25.99,
-          category: "Meals",
-          description: "Business lunch meeting",
-          isDeductible: true,
-          paymentMethod: "Credit Card",
-          taxAmount: 2.34,
-        };
+      // Create form data for the API request
+      const formData = new FormData();
+      formData.append('file', fileToProcess.file);
+      formData.append('organizationId', 'mock-org-id'); // In real app, get this from context/state
 
+      // Call the receipts process API
+      const response = await fetch('/api/receipts/process', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to process receipt: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
         setUploadedFiles((prev) =>
           prev.map((file) =>
             file.id === fileId
               ? {
                   ...file,
-                  status: "processed",
-                  progress: 100,
-                  showSuccessButton: true,
+                  status: "error",
+                  progress: 0,
                 }
               : file
           )
         );
-
-        // Call parent callback with extracted data
-        onFileProcessed(fileId, mockExtractedData);
-      } else {
-        setUploadedFiles((prev) =>
-          prev.map((file) =>
-            file.id === fileId ? { ...file, progress } : file
-          )
-        );
+        throw new Error(result.message || 'Failed to process receipt');
       }
-    }, 300);
+
+      // Update file status to processed
+      setUploadedFiles((prev) =>
+        prev.map((file) =>
+          file.id === fileId
+            ? {
+                ...file,
+                status: "processed",
+                progress: 100,
+              }
+            : file
+        )
+      );
+
+      // Call parent callback with extracted data
+      onFileProcessed(fileId, result.data);
+    } catch (error) {
+      console.error('Error processing file:', error);
+      // Update file status to error
+      setUploadedFiles((prev) =>
+        prev.map((file) =>
+          file.id === fileId
+            ? { ...file, status: "error" }
+            : file
+        )
+      );
+      // You might want to show an error toast/notification here
+    }
   };
 
   const processAllFiles = () => {
@@ -290,6 +330,7 @@ Network error: ${
 
   useImperativeHandle(ref, () => ({
     updateFileStatus: updateFileStatus,
+    getFile: (fileId: string) => uploadedFiles.find(file => file.id === fileId),
   }));
 
   return (
@@ -313,7 +354,7 @@ Network error: ${
           <input
             type="file"
             multiple
-            accept=".jpg,.jpeg,.png,.pdf"
+            accept={accept}
             onChange={handleFileInput}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
@@ -418,10 +459,10 @@ Network error: ${
                                   Done
                                 </span>
                               )}
-                              {file.status === "rejected" && (
+                              {file.status === "error" && (
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                   <X className="w-3 h-3 mr-1" />
-                                  Rejected
+                                  Error
                                 </span>
                               )}
                             </div>
@@ -479,13 +520,9 @@ Network error: ${
                     {/* Process Button */}
                     {(file.status === "uploaded" ||
                       file.status === "processing" ||
-                      (file.status === "processed" &&
-                        file.showSuccessButton)) && (
-                      <div
-                        className={`border-t border-gray-200 pt-3 transition-opacity duration-1000 mt-3 ${
-                          file.successButtonFading ? "opacity-0" : "opacity-100"
-                        }`}
-                      >
+                      file.status === "processed" ||
+                      file.status === "error") && (
+                      <div className="border-t border-gray-200 pt-3 mt-3">
                         {file.status === "uploaded" && (
                           <Button
                             variant="primary"
@@ -510,18 +547,17 @@ Network error: ${
                           </Button>
                         )}
 
-                        {file.status === "processed" &&
-                          file.showSuccessButton && (
-                            <Button
-                              variant="success"
-                              size="sm"
-                              fullWidth
-                              icon={<CheckCircle />}
-                              disabled
-                            >
-                              Success!
-                            </Button>
-                          )}
+                        {(file.status === "processed" || file.status === "error") && (
+                          <Button
+                            variant={file.status === "processed" ? "success" : "primary"}
+                            size="sm"
+                            fullWidth
+                            icon={file.status === "processed" ? <CheckCircle /> : <Brain />}
+                            onClick={() => processFile(file.id)}
+                          >
+                            {file.status === "processed" ? "Process Again" : "Retry"}
+                          </Button>
+                        )}
                       </div>
                     )}
                   </div>

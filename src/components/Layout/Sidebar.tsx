@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -12,8 +12,10 @@ import {
   Settings,
   Bell,
   Users,
-  HelpCircle
+  HelpCircle,
+  LogOut
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Navigation items based on the app requirements
 const navigationItems = [
@@ -82,6 +84,61 @@ interface SidebarProps {
 
 export function Sidebar({ isCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
+  const [profile, setProfile] = useState<{ first_name: string | null; last_name: string | null } | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
+
+  // Fetch user profile data using ProfileService
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        console.log("🔐 User:", user);
+        try {
+          setProfile({
+            first_name: user.user_metadata.first_name,
+            last_name: user.user_metadata.last_name
+          });
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+      // The redirection is now handled by the AuthContext
+    } catch (error) {
+      console.error('Sign out error:', error);
+      setSigningOut(false); // Reset loading state if there's an error
+    }
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Get display name
+  const getDisplayName = () => {
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name} ${profile.last_name}`;
+    }
+    if (user?.email) {
+      return user.email;
+    }
+    return 'User';
+  };
 
   return (
     <div 
@@ -168,18 +225,34 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
         })}
       </div>
 
-      {/* User Profile Section */}
       {!isCollapsed && (
         <div className="px-4 py-4 border-t border-gray-300">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 mb-3">
             <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-              <span className="text-gray-800 text-base font-medium">JD</span>
+              <span className="text-gray-800 text-base font-medium">{getUserInitials()}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-base font-medium text-gray-900 truncate">John Doe</p>
+              <p className="text-base font-medium text-gray-900 truncate">{getDisplayName()}</p>
               <p className="text-xs text-gray-600 truncate">Freelancer</p>
             </div>
           </div>
+          
+          <button
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className={`flex items-center w-full px-3 py-2 text-sm rounded-lg transition-colors ${
+              signingOut 
+                ? 'text-gray-400 cursor-not-allowed' 
+                : 'text-gray-700 hover:bg-gray-100 cursor-pointer'
+            }`}
+          >
+            {signingOut ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></div>
+            ) : (
+              <LogOut className="w-4 h-4 mr-2" />
+            )}
+            {signingOut ? 'Signing out...' : 'Sign out'}
+          </button>
         </div>
       )}
     </div>

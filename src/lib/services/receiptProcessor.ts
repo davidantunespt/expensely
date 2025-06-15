@@ -1,12 +1,10 @@
 import { ReceiptData } from "@/lib/validations/receipt";
+import { createAIService } from "./AIService";
+import { FileMetadata } from "./FileService";
 
 /**
- * Mock receipt processing service
- * In a real implementation, this would integrate with OCR services like:
- * - Google Cloud Vision API
- * - AWS Textract
- * - Azure Computer Vision
- * - Tesseract.js for client-side processing
+ * Receipt processing service that uses AI/LLM for data extraction
+ * with QR code scanning as a fallback
  */
 
 interface ProcessingResult {
@@ -15,151 +13,6 @@ interface ProcessingResult {
   extractedAt: string;
 }
 
-/**
- * Simulates processing a receipt file and extracting data
- * @param file - The uploaded receipt file
- * @returns Promise with extracted receipt data
- */
-export async function processReceiptFile(
-  file: File
-): Promise<ProcessingResult> {
-  // Simulate processing delay
-  await new Promise((resolve) =>
-    setTimeout(resolve, 2000 + Math.random() * 3000)
-  );
-
-  // Mock extracted data based on file name or content
-  const mockData: ReceiptData[] = [
-    {
-      vendor: "Starbucks Coffee",
-      date: "2024-01-15",
-      amount: 12.45,
-      category: "Meals",
-      description: "Coffee and pastry for client meeting",
-      isDeductible: true,
-      paymentMethod: "Credit Card",
-      taxAmount: 1.12,
-    },
-    {
-      vendor: "Uber Technologies",
-      date: "2024-01-14",
-      amount: 24.8,
-      category: "Travel",
-      description: "Airport transfer for business trip",
-      isDeductible: true,
-      paymentMethod: "Digital Wallet",
-      taxAmount: 2.24,
-    },
-    {
-      vendor: "Office Depot",
-      date: "2024-01-13",
-      amount: 67.99,
-      category: "Office Supplies",
-      description: "Printer paper, pens, and notebooks",
-      isDeductible: true,
-      paymentMethod: "Credit Card",
-      taxAmount: 6.12,
-    },
-    {
-      vendor: "Adobe Systems",
-      date: "2024-01-12",
-      amount: 52.99,
-      category: "Software",
-      description: "Adobe Creative Cloud monthly subscription",
-      isDeductible: true,
-      paymentMethod: "Credit Card",
-      taxAmount: 4.77,
-    },
-    {
-      vendor: "McDonald's",
-      date: "2024-01-11",
-      amount: 8.75,
-      category: "Meals",
-      description: "Quick lunch during work day",
-      isDeductible: false,
-      paymentMethod: "Cash",
-      taxAmount: 0.79,
-    },
-  ];
-
-  // Select random mock data or use file-based logic
-  const selectedData = mockData[Math.floor(Math.random() * mockData.length)];
-
-  // Simulate confidence based on file type and quality
-  let confidence = 85; // Base confidence
-
-  if (file.type === "application/pdf") {
-    confidence += 10; // PDFs usually have better text extraction
-  } else if (file.type.startsWith("image/")) {
-    confidence += Math.random() * 15 - 5; // Images vary in quality
-  }
-
-  // Adjust confidence based on file size (larger files might be higher quality)
-  if (file.size > 1024 * 1024) {
-    // > 1MB
-    confidence += 5;
-  }
-
-  confidence = Math.min(95, Math.max(70, confidence)); // Clamp between 70-95%
-
-  return {
-    data: selectedData,
-    confidence: Math.round(confidence),
-    extractedAt: new Date().toISOString(),
-  };
-}
-
-/**
- * Validates and normalizes extracted receipt data
- * @param data - Raw extracted data
- * @returns Validated and normalized receipt data
- */
-export function validateAndNormalizeReceiptData(
-  data: Partial<ReceiptData>
-): ReceiptData {
-  // Normalize vendor name
-  const vendor = data.vendor?.trim() || "Unknown Vendor";
-
-  // Ensure date is in correct format
-  let date = data.date || new Date().toISOString().split("T")[0];
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    date = new Date().toISOString().split("T")[0];
-  }
-
-  // Ensure amount is valid
-  const amount =
-    typeof data.amount === "number" && data.amount > 0 ? data.amount : 0;
-
-  // Default category if not provided
-  const category = data.category || "Other";
-
-  // Default description
-  const description = data.description?.trim() || `Purchase from ${vendor}`;
-
-  // Default payment method
-  const paymentMethod = data.paymentMethod || "Credit Card";
-
-  // Calculate tax amount if not provided
-  const taxAmount =
-    data.taxAmount !== undefined ? data.taxAmount : amount * 0.09; // 9% default tax rate
-
-  return {
-    vendor,
-    date,
-    amount,
-    category: category as ReceiptData["category"],
-    description,
-    isDeductible: data.isDeductible ?? true, // Default to deductible for business expenses
-    paymentMethod: paymentMethod as ReceiptData["paymentMethod"],
-    taxAmount,
-  };
-}
-
-/**
- * Scans a receipt file using external OCR API
- * @param file - The receipt file to scan
- * @returns Promise with the OCR scan response
- */
 interface QRCodeReaderResult {
   results: Array<{
     data: string;
@@ -167,6 +20,45 @@ interface QRCodeReaderResult {
   }>;
 }
 
+/**
+ * Extracts text from an image using OCR
+ * @param file - The image file to process
+ * @returns Promise with extracted text
+ */
+async function extractTextFromImage(
+  file: File,
+  fileMetadata?: FileMetadata
+): Promise<ReceiptData | null> {
+  const aiService = createAIService("openai", {
+    apiKey: process.env.GC_API_KEY!,
+  });
+
+  const generatedText = await aiService.processReceipt(
+    file,
+    fileMetadata?.fileUrl
+  );
+  console.log(" OPENAI result :robot: ", generatedText);
+
+  let extractedData: ReceiptData;
+  try {
+    const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+    const jsonText = jsonMatch ? jsonMatch[0] : generatedText;
+    extractedData = JSON.parse(jsonText);
+  } catch {
+    console.error("Failed to parse AI response:", generatedText);
+    throw new Error("Invalid JSON response from AI");
+  }
+
+  console.log("extractedData :robot: ", extractedData);
+
+  return extractedData;
+}
+
+/**
+ * Scans a receipt file using QR code service
+ * @param file - The receipt file to scan
+ * @returns Promise with the QR code scan response
+ */
 export async function scanReceiptQRCode(
   file: File
 ): Promise<QRCodeReaderResult> {
@@ -185,15 +77,117 @@ export async function scanReceiptQRCode(
 
     if (!response.ok) {
       throw new Error(
-        `OCR scan failed with status: ${response.status} - ${response.statusText}`
+        `QR code scan failed with status: ${response.status} - ${response.statusText}`
       );
     }
 
-    const data = await response.json();
-
-    return data;
-  } catch (error) {
+    return await response.json();
+  } catch (error: unknown) {
     console.error("Error scanning receipt:", error);
     throw new Error("Failed to scan receipt file");
   }
 }
+
+/**
+ * Main function to process a receipt file
+ * Uses AI/LLM for primary processing with QR code scanning as fallback
+ * @param file - The uploaded receipt file
+ * @returns Promise with extracted receipt data
+ */
+export async function processReceiptFile(
+  organizationId: string,
+  file: File
+): Promise<ProcessingResult> {
+  try {
+    // save the file
+    // const fileService = new FileService();
+    // const fileData = await fileService.uploadReceiptFile(
+    //   organizationId,
+    //   file
+    //   // null - no file id, temporary upload
+    // );
+
+    // Step 1: Extract text from image using OCR
+    if (process.env.DUMMY_AI_DATA === "true") {
+      console.log("RETURNING DUMMY_AI_DATA");
+      return {
+        data: dummyData as ReceiptData,
+        confidence: 90,
+        extractedAt: new Date().toISOString(),
+      };
+    }
+
+    const extractedReceipt = await extractTextFromImage(file);
+
+    if (!extractedReceipt) {
+      throw new Error("No text extracted from image");
+    }
+
+    return {
+      data: extractedReceipt,
+      confidence: 90, // High confidence for AI/LLM processing
+      extractedAt: new Date().toISOString(),
+    };
+  } catch (error: unknown) {
+    throw error;
+  }
+}
+
+export async function retrieveFinanceInfo(
+  qrData: string
+): Promise<ReceiptData> {
+  try {
+    const formData = new FormData();
+    formData.append("data", qrData);
+
+    const response = await fetch(
+      "https://qrcode.usados.top/fiscal-data/parse",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Basic " + btoa("admin:pyOsLs8fFGv3P2p"),
+        },
+        body: formData,
+        redirect: "follow",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Fetching finance info failed with status: ${response.status} - ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  } catch (error: unknown) {
+    console.error("Error fetching finance info:", error);
+    throw new Error("Failed to fetch finance info");
+  }
+}
+
+const dummyData = {
+  vendor: "PADARIA PORTUGUESA",
+  date: "2023-06-04 08:40:48",
+  category: "Meals",
+  description: "Breakfast items including sandwiches and coffee",
+  isDeductible: false,
+  paymentMethod: "Cash",
+  taxAmount: 0.36,
+  qrCode: "",
+  documentType: "Receipt",
+  items: [
+    { name: "SandesCroissa", quantity: 1, price: 2.7 },
+    { name: "CroisBrioche", quantity: 1, price: 0 },
+    { name: "Mista", quantity: 1, price: 0 },
+    { name: "SumoNaturala", quantity: 1, price: 2.99 },
+    { name: "Cafe Organico", quantity: 1, price: 0.9 },
+  ],
+  totalItems: 5,
+  totalAmount: 3.99,
+  totalTax: 0.36,
+  totalDiscount: 2.6,
+  issuerVatNumber: "509783065",
+  buyerVatNumber: "",
+  documentDate: "2023-06-04 08:40:48",
+  documentId: "F5 095/1006163",
+};

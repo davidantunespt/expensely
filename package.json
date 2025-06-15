@@ -3,15 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "dotenv -e .env.local -- prisma generate",
+    "db:push": "dotenv -e .env.local -- prisma db push",
+    "db:pull": "dotenv -e .env.local -- prisma db pull",
+    "db:studio": "dotenv -e .env.local -- prisma studio",
+    "db:reset": "dotenv -e .env.local -- prisma migrate reset",
+    "script:test-db": "tsx src/lib/scripts/test-database.ts",
+    "script:seed": "tsx src/lib/scripts/seed-data.ts"
   },
   "dependencies": {
+    "@prisma/client": "^6.9.0",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.50.0",
+    "@types/lru-cache": "^7.10.9",
     "@types/uuid": "^10.0.0",
+    "lru-cache": "^11.1.0",
     "lucide-react": "^0.511.0",
     "next": "15.3.3",
+    "openai": "^5.3.0",
+    "prisma": "^6.9.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "uuid": "^11.1.0",
@@ -23,9 +37,12 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^16.5.0",
+    "dotenv-cli": "^8.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "tailwindcss": "^4",
+    "tsx": "^4.19.4",
     "typescript": "^5"
   }
 }

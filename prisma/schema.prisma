@@ -1,0 +1,176 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// https://medium.com/@ngoctranfire/using-prisma-with-supabase-row-level-security-and-multi-schema-7c53418adba3
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["public"]
+}
+
+// User profiles table - extends Supabase auth.users
+model Profile {
+  id          String   @id @db.Uuid
+  firstName   String?  @map("first_name")
+  lastName    String?  @map("last_name")
+  displayName String?  @map("display_name")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Default organization (every user has one default org)
+  defaultOrganizationId String?       @map("default_organization_id") @db.Uuid
+  defaultOrganization   Organization? @relation("DefaultOrganization", fields: [defaultOrganizationId], references: [id])
+
+  // Relationships
+  receipts           Receipt[]
+  organizations      OrganizationMember[]
+  ownedOrganizations Organization[]       @relation("OrganizationOwner")
+
+  @@map("profile")
+  @@schema("public")
+}
+
+// Organization table for managing companies/teams
+model Organization {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  ownerId     String   @map("owner_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relationships
+  owner              Profile              @relation("OrganizationOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members            OrganizationMember[]
+  defaultForProfiles Profile[]            @relation("DefaultOrganization")
+  receipts           Receipt[]
+
+  @@map("organization")
+  @@schema("public")
+}
+
+// Junction table for Profile-Organization membership with roles
+model OrganizationMember {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId      String           @map("profile_id") @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  role           OrganizationRole @map("role")
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relationships
+  profile      Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Ensure one membership per profile per organization
+  @@unique([profileId, organizationId])
+  @@map("organization_member")
+  @@schema("public")
+}
+
+// Portuguese tax receipts/invoices table
+model Receipt {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  addedById String @map("added_by_id") @db.Uuid
+
+  // Tax identification numbers
+  issuerNif     String? @map("issuer_nif")
+  buyerNif      String? @map("buyer_nif")
+  issuerCountry String? @map("issuer_country")
+  buyerCountry  String? @map("buyer_country")
+
+  // Document information
+  documentType DocumentType? @map("document_type")
+  documentId   String?       @map("document_id")
+  documentDate DateTime?     @map("document_date")
+
+  // VAT information
+  vatRegime            String? @map("vat_regime")
+  vatRegimeDescription String? @map("vat_regime_description")
+  exemptionReasonCode  String? @map("exemption_reason_code")
+
+  isDeductible Boolean?  @map("is_deductible")
+  confidence   Int?      @map("confidence")
+  category     Category? @map("category")
+
+  paymentMethod String?  @map("payment_method") // "Credit Card", "Cash", "Auto-pay", "Other"
+  taxAmount     Decimal? @map("tax_amount") @db.Decimal(10, 2)
+  description   String?  @map("description")
+
+  // Financial amounts (using Decimal for precision)
+  normalTaxableBase Decimal? @map("normal_taxable_base") @db.Decimal(10, 2)
+  normalVatValue    Decimal? @map("normal_vat_value") @db.Decimal(10, 2)
+  totalVat          Decimal? @map("total_vat") @db.Decimal(10, 2)
+  totalAmount       Decimal  @map("total_amount") @db.Decimal(10, 2)
+
+  // Software certification
+  softwareCertificate String? @map("software_certificate") // "fsSP"
+
+  // Issuer validation data (stored as JSON)
+  issuerVatValidation Json? @map("issuer_vat_validation")
+  buyerVatValidation  Json? @map("buyer_vat_validation")
+
+  // QR code data
+  qrCode String? @map("qr_code")
+
+  // Metadata
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Organization relationship (receipts belong to organizations)
+  organizationId String?       @map("organization_id") @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  // Relationships
+  addedBy Profile @relation(fields: [addedById], references: [id], onDelete: Cascade)
+
+  // File information
+  fileUrl  String? @map("file_url")
+  fileName String? @map("file_name")
+  fileType String? @map("file_type")
+  fileSize Int?    @map("file_size")
+  fileHash String? @map("file_hash")
+
+  @@map("receipt")
+  @@schema("public")
+}
+
+enum Category {
+  OFFICE_SUPPLIES
+  TRANSPORTATION
+  SOFTWARE_AND_SERVICES
+  MEALS_AND_ENTERTAINMENT
+  OTHER
+
+  @@map("category")
+  @@schema("public")
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+
+  @@map("organization_role")
+  @@schema("public")
+}
+
+enum DocumentType {
+  INVOICE
+  RECEIPT
+  OTHER
+
+  @@map("document_type")
+  @@schema("public")
+}

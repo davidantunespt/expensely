@@ -1,40 +1,41 @@
 import { z } from "zod";
 
-// Receipt data schema for validation
+// Receipt Item Schema
+export const receiptItemSchema = z.object({
+  description: z.string(),
+  quantity: z.number().min(1),
+  unitPrice: z.number().min(0),
+  total: z.number().min(0),
+});
+
+// Receipt Data Schema
 export const receiptDataSchema = z.object({
-  vendor: z.string().min(1, "Vendor name is required"),
-  date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
-  amount: z.number().positive("Amount must be positive"),
-  category: z.enum(
-    [
-      "Meals",
-      "Travel",
-      "Office Supplies",
-      "Software",
-      "Marketing",
-      "Utilities",
-      "Professional Services",
-      "Equipment",
-      "Other",
-    ],
-    { required_error: "Category is required" }
-  ),
-  description: z.string().min(1, "Description is required"),
+  date: z.string(),
+  vendor: z.string(),
+  category: z.enum([
+    "Meals",
+    "Travel",
+    "Gas",
+    "Office Supplies",
+    "Marketing",
+    "Software",
+    "Entertainment",
+    "Other",
+  ]),
+  totalAmount: z.number().min(0),
+  totalTax: z.number().min(0),
+  totalDiscount: z.number().min(0),
+  paymentMethod: z.string(),
+  items: z.array(receiptItemSchema),
+  description: z.string().optional(),
   isDeductible: z.boolean(),
-  paymentMethod: z.enum(
-    [
-      "Credit Card",
-      "Debit Card",
-      "Cash",
-      "Bank Transfer",
-      "Check",
-      "Digital Wallet",
-    ],
-    { required_error: "Payment method is required" }
-  ),
-  taxAmount: z.number().min(0).optional(),
+  taxAmount: z.number(),
+  qrCode: z.string(),
+  documentType: z.enum(["Receipt", "Invoice", "Other"]),
+  issuerVatNumber: z.string(),
+  buyerVatNumber: z.string(),
+  documentDate: z.string(),
+  documentId: z.string(),
 });
 
 // API response schema
@@ -69,27 +70,35 @@ export const fileUploadSchema = z.object({
 });
 
 // Save expense request schema
-export const saveExpenseRequestSchema = receiptDataSchema.extend({
-  id: z.string().uuid().optional(), // For updating existing expenses
-  userId: z.string().optional(), // For user association
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
+export const saveExpenseRequestSchema = z.object({
+  vendor: z.string(),
+  date: z.string(),
+  amount: z.number(),
+  category: z.string(),
+  description: z.string(),
+  isDeductible: z.boolean(),
+  paymentMethod: z.string(),
+  taxAmount: z.number().optional(),
 });
 
 // Save expense response schema
 export const saveExpenseResponseSchema = z.object({
   success: z.boolean(),
-  data: z
-    .object({
-      id: z.string().uuid(),
-      createdAt: z.string(),
-      updatedAt: z.string(),
-    })
-    .optional(),
   message: z.string(),
+  data: z.object({
+    id: z.string(),
+    vendor: z.string(),
+    date: z.string(),
+    amount: z.number(),
+    category: z.string(),
+    description: z.string(),
+    isDeductible: z.boolean(),
+    paymentMethod: z.string(),
+    taxAmount: z.number().optional(),
+  }),
 });
 
-// Export types
+export type ReceiptItem = z.infer<typeof receiptItemSchema>;
 export type ReceiptData = z.infer<typeof receiptDataSchema>;
 export type ReceiptProcessingResponse = z.infer<
   typeof receiptProcessingResponseSchema

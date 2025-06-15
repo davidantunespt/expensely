@@ -1,9 +1,7 @@
+import { processReceiptFile } from "@/lib/services/ReceiptProcessor";
+import { verifyAccess } from "@/lib/utils/access";
+import { getUserFromRequest } from "@/lib/utils/request";
 import { NextRequest, NextResponse } from "next/server";
-import { receiptProcessingResponseSchema } from "@/lib/validations/receipt";
-import {
-  processReceiptFile,
-  validateAndNormalizeReceiptData,
-} from "@/lib/services/ReceiptProcessor";
 
 /**
  * POST /api/receipts/process
@@ -11,7 +9,7 @@ import {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Get the uploaded file from form data
+    // Get the uploaded file and organization from form data
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -19,12 +17,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: "No file provided",
+          message: "Missing required fields",
           extractedAt: new Date().toISOString(),
         },
         { status: 400 }
       );
     }
+
+    const user = getUserFromRequest(request);
+
+    // Verify organization access
+    await verifyAccess(user.id, user.organizationId);
 
     // Validate file type and size
     const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
@@ -52,29 +55,80 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate file name
+    if (!file.name || file.name.length > 255) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid file name",
+          extractedAt: new Date().toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check for malicious file extensions
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    const allowedExtensions = ["pdf", "jpg", "jpeg", "png"];
+    if (!extension || !allowedExtensions.includes(extension)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid file extension",
+          extractedAt: new Date().toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
     // Process the receipt file
-    const processingResult = await processReceiptFile(file);
+    const processingResult = await processReceiptFile(
+      user.organizationId,
+      file
+    );
 
     // Validate and normalize the extracted data
-    const normalizedData = validateAndNormalizeReceiptData(
-      processingResult.data
-    );
+    // const normalizedData = validateAndNormalizeReceiptData(
+    //   processingResult.data
+    // );
 
     // Create response object
     const response = {
       success: true,
-      data: normalizedData,
+      data: processingResult.data,
       message: `Receipt processed successfully with ${processingResult.confidence}% confidence`,
       confidence: processingResult.confidence,
       extractedAt: processingResult.extractedAt,
     };
 
-    // Validate response against schema
-    const validatedResponse = receiptProcessingResponseSchema.parse(response);
-
-    return NextResponse.json(validatedResponse, { status: 200 });
-  } catch (error) {
+    return NextResponse.json(response, { status: 200 });
+  } catch (error: unknown) {
     console.error("Receipt processing error:", error);
+
+    // Handle specific error types
+    if (error instanceof Error) {
+      if (error.message.includes("access")) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: error.message,
+            extractedAt: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
+
+      if (error.message.includes("Invalid file")) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: error.message,
+            extractedAt: new Date().toISOString(),
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     return NextResponse.json(
       {
@@ -86,21 +140,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-/**
- * GET /api/receipts/process
- * Returns information about the receipt processing endpoint
- */
-export async function GET() {
-  return NextResponse.json({
-    endpoint: "/api/receipts/process",
-    method: "POST",
-    description: "Upload a receipt file to extract expense data",
-    supportedFormats: ["image/jpeg", "image/png", "application/pdf"],
-    maxFileSize: "10MB",
-    fields: {
-      file: "The receipt file to process (required)",
-    },
-  });
 }

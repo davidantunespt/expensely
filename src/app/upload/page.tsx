@@ -14,6 +14,8 @@ interface ProcessedFile {
   isCollapsed: boolean;
   isCollapsing?: boolean;
   isDiscarding?: boolean;
+  documentUrl: string;
+  preview?: string;
 }
 
 export default function UploadReceipt() {
@@ -22,18 +24,21 @@ export default function UploadReceipt() {
   const fileUploadAreaRef = useRef<FileUploadAreaRef>(null);
 
   const handleFileProcessed = (fileId: string, extractedData: ReceiptData) => {
-    // Find the file name from the uploaded files (in a real app, you'd track this)
-    const fileName = `Receipt_${fileId.slice(0, 8)}.jpg`;
+    // Get the file from the FileUploadArea ref
+    const file = fileUploadAreaRef.current?.getFile(fileId);
     
-    const processedFile: ProcessedFile = {
-      fileId,
-      fileName,
-      data: extractedData,
-      isReviewed: false,
-      isCollapsed: false
-    };
-
-    setProcessedFiles(prev => [...prev, processedFile]);
+    setProcessedFiles(prev => [
+      ...prev,
+      {
+        fileId,
+        fileName: file?.name || 'Unknown file',
+        data: extractedData,
+        isReviewed: false,
+        isCollapsed: false,
+        documentUrl: file?.preview || '',
+        preview: file?.preview || '',
+      }
+    ]);
   };
 
   const handleFileUpdated = (fileId: string, updates: Partial<ProcessedFile>) => {
@@ -88,7 +93,13 @@ export default function UploadReceipt() {
 
       {/* File Upload Area */}
       <div className="mb-4">
-        <FileUploadArea onFileProcessed={handleFileProcessed} ref={fileUploadAreaRef} />
+        <FileUploadArea 
+          onFileProcessed={handleFileProcessed} 
+          ref={fileUploadAreaRef}
+          // Add any additional props needed by FileUploadArea
+          accept="image/jpeg,image/png,application/pdf"
+          maxSize={10 * 1024 * 1024} // 10MB
+        />
       </div>
 
       {/* Three-Step Flow Guide - Only shows when no files are processed */}
@@ -140,7 +151,7 @@ export default function UploadReceipt() {
           <ReceiptDataDisplay 
             processedFiles={processedFiles}
             onFileUpdated={handleFileUpdated}
-            onDiscard={handleDiscardProcessedFile}
+            onDiscardFile={handleDiscardProcessedFile}
             onBulkSave={handleBulkSave}
             isSaving={isSaving}
             setProcessedFiles={setProcessedFiles}

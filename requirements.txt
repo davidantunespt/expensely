@@ -115,3 +115,9 @@ Freelancers and gig workers
 - FAQs
 - Live Chat or Ticketing
 - Tutorial Videos (e.g., "Scan your first receipt")
+
+
+
+
+
+https://medium.com/@ngoctranfire/using-prisma-with-supabase-row-level-security-and-multi-schema-7c53418adba3
