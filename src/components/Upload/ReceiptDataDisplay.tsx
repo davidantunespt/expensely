@@ -23,6 +23,8 @@ interface ReceiptDataDisplayProps {
   onDiscardFile: (fileId: string) => void;
 }
 
+const DATE_DISPLAY_FORMAT = 'dd/MM/yyyy, HH:mm:ss';
+
 export function ReceiptDataDisplay({
   processedFiles,
   onFileUpdated,
@@ -92,12 +94,57 @@ export function ReceiptDataDisplay({
     });
   };
 
+  const handleAddItem = (fileId: string) => {
+    const file = processedFiles.find(f => f.fileId === fileId);
+    if (!file) return;
+    const newItem = { name: '', quantity: 1, tax: 0, total: 0 };
+    onFileUpdated(fileId, {
+      data: {
+        ...file.data,
+        items: [...file.data.items, newItem],
+      },
+    });
+  };
+
+  const handleRemoveItem = (fileId: string, idx: number) => {
+    const file = processedFiles.find(f => f.fileId === fileId);
+    if (!file) return;
+    const updatedItems = file.data.items.filter((_, i) => i !== idx);
+    onFileUpdated(fileId, {
+      data: {
+        ...file.data,
+        items: updatedItems,
+      },
+    });
+  };
+
   // Don't render anything if no files have been processed
   if (processedFiles.length === 0) {
     return null;
   }
 
   const currentFile = processedFiles.find(f => f.fileId === viewingFileId);
+
+  function formatDateTime(dt: string, format = DATE_DISPLAY_FORMAT) {
+    if (!dt) return '';
+    const d = new Date(dt);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    // Support for 'yyyy/MM/dd, HH:mm:ss'
+    return format
+      .replace('yyyy', d.getFullYear().toString())
+      .replace('MM', pad(d.getMonth() + 1))
+      .replace('dd', pad(d.getDate()))
+      .replace('HH', pad(d.getHours()))
+      .replace('mm', pad(d.getMinutes()))
+      .replace('ss', pad(d.getSeconds()));
+  }
+
+  function toDatetimeLocal(dt: string) {
+    if (!dt) return '';
+    const d = new Date(dt);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
 
   return (
     <div className="relative">
@@ -134,7 +181,7 @@ export function ReceiptDataDisplay({
                 {file.preview && (
                   <button
                     onClick={() => setViewingFileId(viewingFileId === file.fileId ? null : file.fileId)}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors cursor-pointer"
                     title="View document"
                   >
                     <Eye className="w-4 h-4" />
@@ -142,7 +189,7 @@ export function ReceiptDataDisplay({
                 )}
                 <button
                   onClick={() => setEditingFileId(editingFileId === file.fileId ? null : file.fileId)}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors cursor-pointer"
                   title={editingFileId === file.fileId ? "Save changes" : "Edit data"}
                 >
                   {editingFileId === file.fileId ? (
@@ -153,14 +200,14 @@ export function ReceiptDataDisplay({
                 </button>
                 <button
                   onClick={() => handleDiscard(file.fileId)}
-                  className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
                   title="Discard file"
                 >
                   <X className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleToggleCollapse(file.fileId, file.isCollapsed)}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors cursor-pointer"
                   title={file.isCollapsed ? "Expand" : "Collapse"}
                 >
                   {file.isCollapsed ? (
@@ -199,13 +246,11 @@ export function ReceiptDataDisplay({
                         type="text"
                         value={file.data.vendor}
                         onChange={(e) => handleDataUpdate(file.fileId, 'vendor', e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900 placeholder-gray-400"
+                        className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
                         placeholder="Enter vendor name"
                       />
                     ) : (
-                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg">
-                        <p className="text-gray-900 font-medium">{file.data.vendor}</p>
-                      </div>
+                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">{file.data.vendor}</div>
                     )}
                   </div>
 
@@ -216,16 +261,14 @@ export function ReceiptDataDisplay({
                     </label>
                     {editingFileId === file.fileId ? (
                       <input
-                        type="date"
-                        value={file.data.date}
+                        type="datetime-local"
+                        value={toDatetimeLocal(file.data.date)}
                         onChange={(e) => handleDataUpdate(file.fileId, 'date', e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900"
+                        className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
                       />
                     ) : (
-                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg">
-                        <p className="text-gray-900 font-medium">
-                          {new Date(file.data.date).toLocaleDateString()}
-                        </p>
+                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">
+                        {formatDateTime(file.data.date)}
                       </div>
                     )}
                   </div>
@@ -233,7 +276,7 @@ export function ReceiptDataDisplay({
                   {/* Amount */}
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Amount
+                      Total Amount
                     </label>
                     {editingFileId === file.fileId ? (
                       <div className="relative">
@@ -243,15 +286,13 @@ export function ReceiptDataDisplay({
                           step="0.01"
                           value={file.data.totalAmount}
                           onChange={(e) => handleDataUpdate(file.fileId, 'totalAmount', parseFloat(e.target.value))}
-                          className="w-full pl-8 pr-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900 placeholder-gray-400"
+                          className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white text-right"
                           placeholder="0.00"
                         />
                       </div>
                     ) : (
-                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg">
-                        <p className="text-gray-900 font-medium text-lg">
-                          ${file.data.totalAmount.toFixed(2)}
-                        </p>
+                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50 text-right">
+                        ${file.data.totalAmount.toFixed(2)}
                       </div>
                     )}
                   </div>
@@ -262,19 +303,22 @@ export function ReceiptDataDisplay({
                       Category
                     </label>
                     {editingFileId === file.fileId ? (
-                      <select
-                        value={file.data.category}
-                        onChange={(e) => handleDataUpdate(file.fileId, 'category', e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900 appearance-none cursor-pointer"
-                      >
-                        {['Meals', 'Travel', 'Gas', 'Office Supplies', 'Software', 'Marketing', 'Utilities', 'Professional Services', 'Equipment', 'Other'].map((category) => (
-                          <option key={category} value={category}>{category}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg">
-                        <p className="text-gray-900 font-medium">{file.data.category}</p>
+                      <div className="relative w-full">
+                        <select
+                          value={file.data.category}
+                          onChange={(e) => handleDataUpdate(file.fileId, 'category', e.target.value)}
+                          className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white appearance-none pr-8"
+                        >
+                          {['Meals', 'Travel', 'Gas', 'Office Supplies', 'Software', 'Marketing', 'Utilities', 'Professional Services', 'Equipment', 'Other'].map((category) => (
+                            <option key={category} value={category}>{category}</option>
+                          ))}
+                        </select>
+                        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
+                          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </span>
                       </div>
+                    ) : (
+                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">{file.data.category}</div>
                     )}
                   </div>
 
@@ -284,19 +328,22 @@ export function ReceiptDataDisplay({
                       Payment Method
                     </label>
                     {editingFileId === file.fileId ? (
-                      <select
-                        value={file.data.paymentMethod}
-                        onChange={(e) => handleDataUpdate(file.fileId, 'paymentMethod', e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900 appearance-none cursor-pointer"
-                      >
-                        {['Credit Card', 'Debit Card', 'Cash', 'Bank Transfer', 'Check', 'Digital Wallet'].map((method) => (
-                          <option key={method} value={method}>{method}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg">
-                        <p className="text-gray-900 font-medium">{file.data.paymentMethod}</p>
+                      <div className="relative w-full">
+                        <select
+                          value={file.data.paymentMethod}
+                          onChange={(e) => handleDataUpdate(file.fileId, 'paymentMethod', e.target.value)}
+                          className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white appearance-none pr-8"
+                        >
+                          {['Credit Card', 'Debit Card', 'Cash', 'Bank Transfer', 'Check', 'Digital Wallet'].map((method) => (
+                            <option key={method} value={method}>{method}</option>
+                          ))}
+                        </select>
+                        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
+                          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </span>
                       </div>
+                    ) : (
+                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">{file.data.paymentMethod}</div>
                     )}
                   </div>
 
@@ -313,15 +360,13 @@ export function ReceiptDataDisplay({
                           step="0.01"
                           value={file.data.totalTax}
                           onChange={(e) => handleDataUpdate(file.fileId, 'totalTax', parseFloat(e.target.value))}
-                          className="w-full pl-8 pr-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900 placeholder-gray-400"
+                          className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white text-right"
                           placeholder="0.00"
                         />
                       </div>
                     ) : (
-                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg">
-                        <p className="text-gray-900 font-medium">
-                          ${file.data.totalTax.toFixed(2)}
-                        </p>
+                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50 text-right">
+                        ${file.data.totalTax.toFixed(2)}
                       </div>
                     )}
                   </div>
@@ -336,12 +381,12 @@ export function ReceiptDataDisplay({
                         value={file.data.description || ''}
                         onChange={(e) => handleDataUpdate(file.fileId, 'description', e.target.value)}
                         rows={4}
-                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 focus:ring-0 transition-all duration-200 text-gray-900 placeholder-gray-400 resize-none"
+                        className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
                         placeholder="Enter notes for this expense"
                       />
                     ) : (
-                      <div className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-lg min-h-[100px]">
-                        <p className="text-gray-900 font-medium leading-relaxed">{file.data.description || 'No notes'}</p>
+                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50 min-h-[100px]">
+                        {file.data.description || 'No notes'}
                       </div>
                     )}
                   </div>
@@ -357,7 +402,7 @@ export function ReceiptDataDisplay({
                           type="checkbox"
                           checked={file.data.isDeductible}
                           onChange={(e) => handleDataUpdate(file.fileId, 'isDeductible', e.target.checked)}
-                          className="w-5 h-5 text-gray-600 border-2 border-gray-300 rounded focus:border-gray-400 focus:ring-0 cursor-pointer"
+                          className="w-5 h-5 text-gray-600 border-2 border-gray-300 rounded focus:border-gray-400 focus:ring-0"
                         />
                       ) : (
                         <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
@@ -371,7 +416,7 @@ export function ReceiptDataDisplay({
                         </div>
                       )}
                       <div className="flex-1">
-                        <span className="text-gray-900 font-medium">
+                        <span className="text-gray-900 font-medium text-sm">
                           This expense is tax deductible
                         </span>
                         <p className="text-sm text-gray-600 mt-1">
@@ -390,10 +435,24 @@ export function ReceiptDataDisplay({
                       <table className="w-full">
                         <thead className="bg-gray-100">
                           <tr>
-                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Item</th>
-                            <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600">Quantity</th>
-                            <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600">Tax</th>
-                            <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600">Total</th>
+                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 w-1/2">Item</th>
+                            <th className="px-2 py-2 text-right text-xs font-semibold text-gray-600 w-20">Quantity</th>
+                            <th className="px-2 py-2 text-right text-xs font-semibold text-gray-600 w-24">Tax</th>
+                            <th className="px-2 py-2 text-right text-xs font-semibold text-gray-600 w-24">Total</th>
+                            {editingFileId === file.fileId && (
+                              <th className="px-2 py-2 text-center text-xs font-semibold text-gray-600 w-12">
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center justify-center w-6 h-6 text-gray-600 hover:text-green-600 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                                  onClick={() => handleAddItem(file.fileId)}
+                                  title="Add item"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                                  </svg>
+                                </button>
+                              </th>
+                            )}
                           </tr>
                         </thead>
                         <tbody>
@@ -401,47 +460,60 @@ export function ReceiptDataDisplay({
                             <tr key={index} className="border-t border-gray-200">
                               {editingFileId === file.fileId ? (
                                 <>
-                                  <td className="px-4 py-2 text-sm text-gray-900">
+                                  <td className="px-4 py-2 text-sm text-gray-900 leading-tight">
                                     <input
-                                      className="w-full bg-white border border-gray-200 rounded px-2 py-1 text-sm text-gray-900"
+                                      className="w-full px-1.5 py-1 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
                                       value={item.name}
                                       onChange={e => handleItemChange(file.fileId, index, 'name', e.target.value)}
                                     />
                                   </td>
-                                  <td className="px-4 py-2 text-sm text-gray-900 text-right">
+                                  <td className="px-4 py-2 text-sm text-gray-900 leading-tight text-right">
                                     <input
                                       type="number"
-                                      className="w-16 bg-white border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 text-right"
+                                      className="w-full px-1.5 py-1 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white text-right"
                                       value={item.quantity}
                                       min={0}
                                       onChange={e => handleItemChange(file.fileId, index, 'quantity', Number(e.target.value))}
                                     />
                                   </td>
-                                  <td className="px-4 py-2 text-sm text-gray-900 text-right">
+                                  <td className="px-4 py-2 text-sm text-gray-900 leading-tight text-right">
                                     <input
                                       type="number"
-                                      className="w-16 bg-white border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 text-right"
+                                      className="w-full px-1.5 py-1 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white text-right"
                                       value={item.tax || ''}
                                       min={0}
                                       onChange={e => handleItemChange(file.fileId, index, 'tax', Number(e.target.value))}
                                     />
                                   </td>
-                                  <td className="px-4 py-2 text-sm text-gray-900 text-right">
-                                    <input
-                                      type="number"
-                                      className="w-20 bg-white border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 text-right"
-                                      value={item.total}
-                                      min={0}
-                                      onChange={e => handleItemChange(file.fileId, index, 'total', Number(e.target.value))}
-                                    />
+                                  <td className="px-4 py-2 text-sm text-gray-900 leading-tight text-right">
+                                    <div className="relative">
+                                      <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-600 text-sm">$</span>
+                                      <input
+                                        type="number"
+                                        className="w-full pl-6 pr-1.5 py-1 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white text-right"
+                                        value={item.total}
+                                        min={0}
+                                        onChange={e => handleItemChange(file.fileId, index, 'total', Number(e.target.value))}
+                                      />
+                                    </div>
+                                  </td>
+                                  <td className="px-2 py-2 text-center align-middle">
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center justify-center w-6 h-6 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                                      onClick={() => handleRemoveItem(file.fileId, index)}
+                                      title="Remove item"
+                                    >
+                                      ×
+                                    </button>
                                   </td>
                                 </>
                               ) : (
                                 <>
-                                  <td className="px-4 py-2 text-sm text-gray-900">{item.name}</td>
-                                  <td className="px-4 py-2 text-sm text-gray-900 text-right">{item.quantity}</td>
-                                  <td className="px-4 py-2 text-sm text-gray-900 text-right">{item.tax || "0"}</td>
-                                  <td className="px-4 py-2 text-sm text-gray-900 text-right">${item.total?.toFixed(2)}</td>
+                                  <td className="px-4 py-2 text-sm text-gray-900 leading-tight">{item.name}</td>
+                                  <td className="px-4 py-2 text-sm text-gray-900 leading-tight text-right">{item.quantity}</td>
+                                  <td className="px-4 py-2 text-sm text-gray-900 leading-tight text-right">{item.tax || "0"}</td>
+                                  <td className="px-4 py-2 text-sm text-gray-900 leading-tight text-right">${item.total?.toFixed(2)}</td>
                                 </>
                               )}
                             </tr>
@@ -474,7 +546,7 @@ export function ReceiptDataDisplay({
 
                 {/* Action Buttons */}
                 {!editingFileId && !file.isDiscarding && (
-                  <div className="mt-6 pt-4 border-t border-gray-300 flex justify-end space-x-3">
+                  <div className="mt-6 pt-4 border-t border-gray-300 flex justify-end space-x-3 cursor-pointer">
                     <button 
                       onClick={() => handleDiscard(file.fileId)}
                       className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
@@ -504,6 +576,28 @@ export function ReceiptDataDisplay({
           </Box>
         ))}
       </div>
+
+      {processedFiles.length > 0 && (
+        <div className="mt-10 w-full">
+          <div className="bg-white border border-gray-200 rounded-xl p-8 flex flex-col items-center">
+            <div className="font-bold text-lg mb-2 text-center text-gray-900">Ready to Save</div>
+            <div className="text-gray-700 text-center mb-6">
+              {processedFiles.filter(f => f.isReviewed).length} of {processedFiles.length} receipts reviewed. You can save reviewed receipts or review remaining items.
+            </div>
+            <button
+              className={`px-8 py-3 rounded-lg font-medium text-lg mb-2 transition-colors ${processedFiles.some(f => f.isReviewed) ? 'bg-gray-600 text-white hover:bg-gray-700 cursor-pointer' : 'bg-gray-400 text-white cursor-not-allowed'}`}
+              disabled={!processedFiles.some(f => f.isReviewed)}
+            >
+              Save Receipts
+            </button>
+            {!processedFiles.some(f => f.isReviewed) && (
+              <div className="text-xs text-gray-500 mt-1 text-center">
+                Mark at least one receipt as reviewed to enable saving
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

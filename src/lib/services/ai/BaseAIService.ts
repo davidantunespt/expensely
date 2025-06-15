@@ -57,7 +57,7 @@ Analyze the uploaded receipt and extract the following information in JSON forma
   "totalAmount": "Total amount as number",
   "totalTax": "Total tax amount as number",
   "totalDiscount": "Total discount amount as number",
-  "issuerVatNumber": "Issuer VAT (or NIF or 'num contribuinte') number as string",
+  "issuerVatNumber": "Issuer VAT (or NIPC) number as string",
   "buyerVatNumber": "Buyer VAT (or NIF or 'num contribuinte') number as string",
   "documentDate": "Document date and time as string",
   "documentId": "Document ID as string"
