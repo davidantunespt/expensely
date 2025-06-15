@@ -48,10 +48,12 @@ Analyze the uploaded receipt and extract the following information in JSON forma
     {
       "name": "Item name",
       "quantity": "Number of items",
-      "price": "Price per item"
+      "tax": "Tax rate as number",
+      "total": "Total amount as number"
     }
   ],
   "totalItems": "Total number of items",
+  "subtotalAmount": "Subtotal amount as number",
   "totalAmount": "Total amount as number",
   "totalTax": "Total tax amount as number",
   "totalDiscount": "Total discount amount as number",

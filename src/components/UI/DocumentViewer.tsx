@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { X, ZoomIn, ZoomOut, Maximize2, Minimize2 } from "lucide-react";
 import Image from "next/image";
 
@@ -15,7 +15,49 @@ export function DocumentViewer({
 }: DocumentViewerProps) {
   const [zoom, setZoom] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const panStart = useRef<{ x: number; y: number } | null>(null);
+  const mouseStart = useRef<{ x: number; y: number } | null>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  // Zoom with cmd/ctrl + mouse wheel
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleWheel = (event: WheelEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+        setZoom((prev) => {
+          let next = prev - event.deltaY * 0.01;
+          if (next < 0.5) next = 0.5;
+          if (next > 3) next = 3;
+          return Math.round(next * 100) / 100;
+        });
+      }
+    };
+    const node = viewerRef.current;
+    if (node) node.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      if (node) node.removeEventListener("wheel", handleWheel);
+    };
+  }, [isOpen]);
+
+  // Reset pan when zoom changes or viewer opens
+  useEffect(() => {
+    setPan({ x: 0, y: 0 });
+  }, [zoom, isOpen]);
 
   if (!isOpen) return null;
 
@@ -50,6 +92,25 @@ export function DocumentViewer({
     };
   }
 
+  // Mouse event handlers for panning
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsPanning(true);
+    panStart.current = { ...pan };
+    mouseStart.current = { x: e.clientX, y: e.clientY };
+  };
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isPanning || !panStart.current || !mouseStart.current) return;
+    const dx = e.clientX - mouseStart.current.x;
+    const dy = e.clientY - mouseStart.current.y;
+    setPan({ x: panStart.current.x + dx, y: panStart.current.y + dy });
+  };
+  const handleMouseUp = () => {
+    setIsPanning(false);
+    panStart.current = null;
+    mouseStart.current = null;
+  };
+
   return (
     <div
       className={`fixed inset-0 z-50 flex items-start justify-start transition-all duration-300 ${
@@ -63,6 +124,9 @@ export function DocumentViewer({
           isFullscreen ? "w-screen h-screen" : ""
         }`}
         style={{ borderRadius: 0, boxShadow: "none" }}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-3 bg-white w-full" style={{ border: "none", boxShadow: "none" }}>
@@ -111,14 +175,20 @@ export function DocumentViewer({
         {/* Document Container */}
         <div className="w-full h-[calc(100vh-48px)] overflow-auto bg-white flex items-center justify-center">
           <div className="relative w-full h-full min-h-[500px] flex items-center justify-center">
-            <Image
-              src={documentUrl}
-              alt="Document"
-              fill
-              className="object-contain transition-transform duration-200"
-              style={{ transform: `scale(${zoom})` }}
-              unoptimized
-            />
+            <div
+              style={{ width: '100%', height: '100%', cursor: isPanning ? 'grabbing' : 'grab' }}
+              onMouseDown={handleMouseDown}
+            >
+              <Image
+                src={documentUrl}
+                alt="Document"
+                fill
+                className="object-contain transition-transform duration-200"
+                style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
+                unoptimized
+                draggable={false}
+              />
+            </div>
           </div>
         </div>
       </div>

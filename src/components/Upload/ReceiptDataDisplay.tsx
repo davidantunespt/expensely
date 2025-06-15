@@ -78,6 +78,20 @@ export function ReceiptDataDisplay({
     });
   };
 
+  const handleItemChange = (fileId: string, idx: number, field: string, value: string | number) => {
+    const file = processedFiles.find(f => f.fileId === fileId);
+    if (!file) return;
+    const updatedItems = file.data.items.map((item, i) =>
+      i === idx ? { ...item, [field]: value } : item
+    );
+    onFileUpdated(fileId, {
+      data: {
+        ...file.data,
+        items: updatedItems,
+      },
+    });
+  };
+
   // Don't render anything if no files have been processed
   if (processedFiles.length === 0) {
     return null;
@@ -103,8 +117,8 @@ export function ReceiptDataDisplay({
       {/* Main Content */}
       <div className={`space-y-4 transition-all duration-300 ${viewingFileId ? 'ml-[22vw]' : ''}`}>
         {processedFiles.map((file) => (
-          <Box key={file.fileId}>
-            <div className="flex items-center justify-between mb-4">
+          <Box key={file.fileId} style={{ backgroundColor: 'white' }}>
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <h3 className="text-lg font-semibold text-gray-900">
                   {file.fileName}
@@ -158,11 +172,14 @@ export function ReceiptDataDisplay({
               </div>
             </div>
 
-            {/* Receipt Data */}
-            {!file.isCollapsed && (
+            <div
+              className={`transition-all duration-500 ease-in-out overflow-hidden ${
+                file.isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[2000px] opacity-100'
+              }`}
+            >
               <div className="space-y-4">
                 {/* Extraction Status */}
-                <div className="flex items-center mb-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center mb-6 p-3 bg-green-50 border border-green-200 rounded-lg mt-4">
                   <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
                   <div>
                     <p className="text-base font-medium text-green-900">Data Extracted Successfully</p>
@@ -375,17 +392,58 @@ export function ReceiptDataDisplay({
                           <tr>
                             <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Item</th>
                             <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600">Quantity</th>
-                            <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600">Price</th>
+                            <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600">Tax</th>
                             <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600">Total</th>
                           </tr>
                         </thead>
                         <tbody>
                           {file.data.items.map((item, index) => (
                             <tr key={index} className="border-t border-gray-200">
-                              <td className="px-4 py-2 text-sm text-gray-900">{item.description}</td>
-                              <td className="px-4 py-2 text-sm text-gray-900 text-right">{item.quantity}</td>
-                              <td className="px-4 py-2 text-sm text-gray-900 text-right">${item.unitPrice?.toFixed(2)}</td>
-                              <td className="px-4 py-2 text-sm text-gray-900 text-right">${item.total?.toFixed(2)}</td>
+                              {editingFileId === file.fileId ? (
+                                <>
+                                  <td className="px-4 py-2 text-sm text-gray-900">
+                                    <input
+                                      className="w-full bg-white border border-gray-200 rounded px-2 py-1 text-sm text-gray-900"
+                                      value={item.name}
+                                      onChange={e => handleItemChange(file.fileId, index, 'name', e.target.value)}
+                                    />
+                                  </td>
+                                  <td className="px-4 py-2 text-sm text-gray-900 text-right">
+                                    <input
+                                      type="number"
+                                      className="w-16 bg-white border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 text-right"
+                                      value={item.quantity}
+                                      min={0}
+                                      onChange={e => handleItemChange(file.fileId, index, 'quantity', Number(e.target.value))}
+                                    />
+                                  </td>
+                                  <td className="px-4 py-2 text-sm text-gray-900 text-right">
+                                    <input
+                                      type="number"
+                                      className="w-16 bg-white border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 text-right"
+                                      value={item.tax || ''}
+                                      min={0}
+                                      onChange={e => handleItemChange(file.fileId, index, 'tax', Number(e.target.value))}
+                                    />
+                                  </td>
+                                  <td className="px-4 py-2 text-sm text-gray-900 text-right">
+                                    <input
+                                      type="number"
+                                      className="w-20 bg-white border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 text-right"
+                                      value={item.total}
+                                      min={0}
+                                      onChange={e => handleItemChange(file.fileId, index, 'total', Number(e.target.value))}
+                                    />
+                                  </td>
+                                </>
+                              ) : (
+                                <>
+                                  <td className="px-4 py-2 text-sm text-gray-900">{item.name}</td>
+                                  <td className="px-4 py-2 text-sm text-gray-900 text-right">{item.quantity}</td>
+                                  <td className="px-4 py-2 text-sm text-gray-900 text-right">{item.tax || "0"}</td>
+                                  <td className="px-4 py-2 text-sm text-gray-900 text-right">${item.total?.toFixed(2)}</td>
+                                </>
+                              )}
                             </tr>
                           ))}
                         </tbody>
@@ -406,7 +464,7 @@ export function ReceiptDataDisplay({
                           )}
                           <tr className="bg-gray-100">
                             <td colSpan={3} className="px-4 py-2 text-sm font-bold text-gray-900 text-right">Total:</td>
-                            <td className="px-4 py-2 text-sm font-bold text-gray-900 text-right">${(file.data.totalAmount + file.data.totalTax - file.data.totalDiscount).toFixed(2)}</td>
+                            <td className="px-4 py-2 text-sm font-bold text-gray-900 text-right">${(file.data.totalAmount).toFixed(2)}</td>
                           </tr>
                         </tfoot>
                       </table>
@@ -442,7 +500,7 @@ export function ReceiptDataDisplay({
                   </div>
                 )}
               </div>
-            )}
+            </div>
           </Box>
         ))}
       </div>

@@ -2,9 +2,9 @@ import { z } from "zod";
 
 // Receipt Item Schema
 export const receiptItemSchema = z.object({
-  description: z.string(),
+  name: z.string(),
   quantity: z.number().min(1),
-  unitPrice: z.number().min(0),
+  tax: z.number().min(0),
   total: z.number().min(0),
 });
 
