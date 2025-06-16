@@ -53,6 +53,11 @@ export function ReceiptDataDisplay({
   };
 
   const handleMarkAsReviewed = (fileId: string) => {
+    // If in edit mode, exit it first
+    if (editingFileId === fileId) {
+      setEditingFileId(null);
+    }
+
     // First mark as reviewed and start collapsing
     onFileUpdated(fileId, { 
       isReviewed: true, 
@@ -166,21 +171,28 @@ export function ReceiptDataDisplay({
         {processedFiles.map((file) => (
           <Box key={file.fileId} style={{ backgroundColor: 'white' }}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {file.fileName}
-                </h3>
-                {file.isReviewed && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    Reviewed
-                  </span>
-                )}
+              <div className="flex flex-col flex-1 min-w-0">
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-base font-semibold text-gray-900 truncate">
+                    {file.fileName}
+                  </h3>
+                  {file.isReviewed && (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  )}
+                </div>
+                <div className="text-xs text-gray-500 font-normal mt-0.5 truncate">
+                  {file.data.vendor} &bull; ${file.data.totalAmount?.toFixed(2)} &bull; {formatDateTime(file.data.date, 'dd/MM/yyyy')}
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 {file.preview && (
                   <button
-                    onClick={() => setViewingFileId(viewingFileId === file.fileId ? null : file.fileId)}
+                    onClick={() => {
+                      if (file.isCollapsed) {
+                        handleToggleCollapse(file.fileId, file.isCollapsed);
+                      }
+                      setViewingFileId(viewingFileId === file.fileId ? null : file.fileId);
+                    }}
                     className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors cursor-pointer"
                     title="View document"
                   >
@@ -188,7 +200,12 @@ export function ReceiptDataDisplay({
                   </button>
                 )}
                 <button
-                  onClick={() => setEditingFileId(editingFileId === file.fileId ? null : file.fileId)}
+                  onClick={() => {
+                    if (file.isCollapsed) {
+                      handleToggleCollapse(file.fileId, file.isCollapsed);
+                    }
+                    setEditingFileId(editingFileId === file.fileId ? null : file.fileId);
+                  }}
                   className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors cursor-pointer"
                   title={editingFileId === file.fileId ? "Save changes" : "Edit data"}
                 >
@@ -226,12 +243,24 @@ export function ReceiptDataDisplay({
             >
               <div className="space-y-4">
                 {/* Extraction Status */}
-                <div className="flex items-center mb-6 p-3 bg-green-50 border border-green-200 rounded-lg mt-4">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                  <div>
-                    <p className="text-base font-medium text-green-900">Data Extracted Successfully</p>
-                    <p className="text-xs text-green-700">Please review and edit if needed</p>
-                  </div>
+                <div className={`flex items-center mb-6 p-3 ${file.isReviewed ? 'bg-blue-50 border border-blue-200' : 'bg-green-50 border border-green-200'} rounded-lg mt-4`}>
+                  {file.isReviewed ? (
+                    <>
+                      <CheckCircle className="w-5 h-5 text-blue-600 mr-3" />
+                      <div>
+                        <p className="text-base font-medium text-blue-900">Document Reviewed and Ready</p>
+                        <p className="text-xs text-blue-700">This receipt has been verified and is ready to be saved</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                      <div>
+                        <p className="text-base font-medium text-green-900">Data Extracted Successfully</p>
+                        <p className="text-xs text-green-700">Please review and edit if needed</p>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Receipt Data Form */}
@@ -254,6 +283,24 @@ export function ReceiptDataDisplay({
                     )}
                   </div>
 
+                  {/* Document ID */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
+                      Document ID
+                    </label>
+                    {editingFileId === file.fileId ? (
+                      <input
+                        type="text"
+                        value={file.data.documentId || ''}
+                        onChange={(e) => handleDataUpdate(file.fileId, 'documentId', e.target.value)}
+                        className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
+                        placeholder="Enter document ID"
+                      />
+                    ) : (
+                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">{file.data.documentId || '-'}</div>
+                    )}
+                  </div>
+
                   {/* Date */}
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
@@ -273,28 +320,91 @@ export function ReceiptDataDisplay({
                     )}
                   </div>
 
-                  {/* Amount */}
+                  {/* VAT Numbers */}
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Total Amount
+                      Issuer VAT Number
                     </label>
                     {editingFileId === file.fileId ? (
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">$</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={file.data.totalAmount}
-                          onChange={(e) => handleDataUpdate(file.fileId, 'totalAmount', parseFloat(e.target.value))}
-                          className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white text-right"
-                          placeholder="0.00"
-                        />
-                      </div>
+                      <input
+                        type="text"
+                        value={file.data.issuerVatNumber || ''}
+                        onChange={(e) => handleDataUpdate(file.fileId, 'issuerVatNumber', e.target.value)}
+                        className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
+                        placeholder="Enter issuer VAT number"
+                      />
                     ) : (
-                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50 text-right">
-                        ${file.data.totalAmount.toFixed(2)}
-                      </div>
+                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">{file.data.issuerVatNumber || '-'}</div>
                     )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
+                      Buyer VAT Number
+                    </label>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Should match your company VAT</label>
+                      {editingFileId === file.fileId ? (
+                        <input
+                          type="text"
+                          value={file.data.buyerVatNumber || ''}
+                          onChange={(e) => handleDataUpdate(file.fileId, 'buyerVatNumber', e.target.value)}
+                          className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
+                          placeholder="Enter buyer VAT number"
+                        />
+                      ) : (
+                        <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">{file.data.buyerVatNumber || '-'}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Amounts Group */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
+                      Amounts
+                    </label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Total Amount</label>
+                        {editingFileId === file.fileId ? (
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-600 text-sm">$</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={file.data.totalAmount}
+                              onChange={(e) => handleDataUpdate(file.fileId, 'totalAmount', parseFloat(e.target.value))}
+                              className="w-full pl-6 pr-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white text-right"
+                              placeholder="0.00"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50 text-right">
+                            ${file.data.totalAmount.toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Tax Amount</label>
+                        {editingFileId === file.fileId ? (
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-600 text-sm">$</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={file.data.totalTax}
+                              onChange={(e) => handleDataUpdate(file.fileId, 'totalTax', parseFloat(e.target.value))}
+                              className="w-full pl-6 pr-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white text-right"
+                              placeholder="0.00"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50 text-right">
+                            ${file.data.totalTax.toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Category */}
@@ -347,50 +457,6 @@ export function ReceiptDataDisplay({
                     )}
                   </div>
 
-                  {/* Tax Amount */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Tax Amount
-                    </label>
-                    {editingFileId === file.fileId ? (
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">$</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={file.data.totalTax}
-                          onChange={(e) => handleDataUpdate(file.fileId, 'totalTax', parseFloat(e.target.value))}
-                          className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white text-right"
-                          placeholder="0.00"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50 text-right">
-                        ${file.data.totalTax.toFixed(2)}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Notes - Full Width */}
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Notes
-                    </label>
-                    {editingFileId === file.fileId ? (
-                      <textarea
-                        value={file.data.description || ''}
-                        onChange={(e) => handleDataUpdate(file.fileId, 'description', e.target.value)}
-                        rows={4}
-                        className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
-                        placeholder="Enter notes for this expense"
-                      />
-                    ) : (
-                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50 min-h-[100px]">
-                        {file.data.description || 'No notes'}
-                      </div>
-                    )}
-                  </div>
-
                   {/* Tax Deductible - Full Width */}
                   <div className="md:col-span-2 space-y-3">
                     <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
@@ -437,8 +503,8 @@ export function ReceiptDataDisplay({
                           <tr>
                             <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 w-1/2">Item</th>
                             <th className="px-2 py-2 text-right text-xs font-semibold text-gray-600 w-20">Quantity</th>
-                            <th className="px-2 py-2 text-right text-xs font-semibold text-gray-600 w-24">Tax</th>
-                            <th className="px-2 py-2 text-right text-xs font-semibold text-gray-600 w-24">Total</th>
+                            <th className="px-2 py-2 text-right text-xs font-semibold text-gray-600 w-24">Tax %</th>
+                            <th className="px-2 py-2 text-right text-xs font-semibold text-gray-600 w-40">Total</th>
                             {editingFileId === file.fileId && (
                               <th className="px-2 py-2 text-center text-xs font-semibold text-gray-600 w-12">
                                 <button
@@ -545,7 +611,7 @@ export function ReceiptDataDisplay({
                 </div>
 
                 {/* Action Buttons */}
-                {!editingFileId && !file.isDiscarding && (
+                {!file.isDiscarding && (
                   <div className="mt-6 pt-4 border-t border-gray-300 flex justify-end space-x-3 cursor-pointer">
                     <button 
                       onClick={() => handleDiscard(file.fileId)}

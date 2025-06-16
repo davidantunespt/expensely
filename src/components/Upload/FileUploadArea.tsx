@@ -14,7 +14,6 @@ import {
   X,
   CheckCircle,
   Loader2,
-  Eye,
   FileText,
   Brain,
   QrCode,
@@ -335,7 +334,7 @@ Network error: ${
 
   return (
     <>
-      <Box>
+      <Box style={{ backgroundColor: "white" }}>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Upload Receipt Files
         </h3>
@@ -381,32 +380,29 @@ Network error: ${
         {/* Individual File Cards */}
         {uploadedFiles.length > 0 && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-base font-medium text-gray-900">
-                Uploaded Files
-              </h4>
-              {uploadedFiles.some((file) => file.status === "uploaded") && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  icon={<Brain />}
-                  onClick={processAllFiles}
-                >
-                  Process All
-                </Button>
-              )}
-            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {uploadedFiles.map((file) => (
                 <div
                   key={file.id}
-                  className="border border-gray-300 rounded-lg overflow-hidden h-fit"
+                  className="bg-gray-50 rounded-lg overflow-hidden h-fit"
                 >
-                  <div className="p-3">
+                  <div className="p-5">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3 flex-1 min-w-0">
                         {/* File Preview */}
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <button
+                          className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden focus:outline-none"
+                          type="button"
+                          title="Preview file"
+                          onClick={() => {
+                            if (file.preview) {
+                              setViewingImage({
+                                src: file.preview!,
+                                name: file.name,
+                              });
+                            }
+                          }}
+                        >
                           {file.preview ? (
                             <Image
                               src={file.preview}
@@ -425,18 +421,18 @@ Network error: ${
                               )}
                             </div>
                           )}
-                        </div>
+                        </button>
 
                         {/* File Info */}
                         <div className="flex-1 min-w-0">
                           <h5
-                            className="text-sm font-medium text-gray-900 truncate"
+                            className="font-medium text-gray-900 truncate"
                             title={file.name}
                           >
                             {file.name}
                           </h5>
                           <div className="flex items-center gap-2 mt-1">
-                            <p className="text-xs text-gray-600">
+                            <p className="text-sm text-gray-600">
                               {formatFileSize(file.size)}
                             </p>
 
@@ -474,7 +470,7 @@ Network error: ${
                               <div className="w-full bg-gray-300 rounded-full h-1">
                                 <div
                                   className="bg-yellow-600 h-1 rounded-full transition-all duration-300"
-                                  style={{ width: `${file.progress || 0}%` }}
+                                  style={{ width: `${file.progress || 20}%` }}
                                 ></div>
                               </div>
                             </div>
@@ -484,28 +480,6 @@ Network error: ${
 
                       {/* Action Buttons */}
                       <div className="flex flex-col space-y-1 ml-2">
-                        {file.preview && (
-                          <button
-                            className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors cursor-pointer"
-                            title="View image"
-                            onClick={() => {
-                              setViewingImage({
-                                src: file.preview!,
-                                name: file.name,
-                              });
-                            }}
-                          >
-                            <Eye className="w-3 h-3" />
-                          </button>
-                        )}
-
-                        <button
-                          className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
-                          title="Scan receipt"
-                          onClick={() => scanReceipt(file)}
-                        >
-                          <QrCode className="w-3 h-3" />
-                        </button>
 
                         <button
                           onClick={() => removeFile(file.id)}
@@ -513,6 +487,14 @@ Network error: ${
                           title="Remove file"
                         >
                           <X className="w-3 h-3" />
+                        </button>
+
+                        <button
+                          className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                          title="Scan receipt"
+                          onClick={() => scanReceipt(file)}
+                        >
+                          <QrCode className="w-3 h-3" />
                         </button>
                       </div>
                     </div>
@@ -563,6 +545,18 @@ Network error: ${
                   </div>
                 </div>
               ))}
+            </div>
+            <div className="w-full">
+              {uploadedFiles.some((file) => file.status === "uploaded") && (
+                <Button
+                  variant="primary"
+                  size="lg"
+                  icon={<Brain />}
+                  onClick={processAllFiles}
+                >
+                  Process All
+                </Button>
+              )}
             </div>
           </div>
         )}

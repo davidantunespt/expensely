@@ -64,15 +64,17 @@ export async function scanReceiptQRCode(
 ): Promise<QRCodeReaderResult> {
   try {
     const formData = new FormData();
-    formData.append("file", file);
+    const buffer = await file.arrayBuffer();
+    const blob = new Blob([buffer], { type: file.type });
+    formData.append("file", file, file.name);
 
+    console.log("formData", btoa("admin:pyOsLs8fFGv3P2p"), formData);
     const response = await fetch("https://qrcode.usados.top/scan", {
       method: "POST",
       headers: {
-        Authorization: "Basic " + btoa("admin:pyOsLs8fFGv3P2p"),
+        Authorization: "Basic " + process.env.QR_CODE_READER_API_KEY!,
       },
       body: formData,
-      redirect: "follow",
     });
 
     if (!response.ok) {
