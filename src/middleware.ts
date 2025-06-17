@@ -50,8 +50,8 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    // TODO: get organization id
-    request = setUserInRequest(request, user, user.id);
+    const organizationId = request.headers.get("x-organization-id");
+    request = setUserInRequest(request, user, organizationId || user.id);
   }
 
   const { pathname } = request.nextUrl;

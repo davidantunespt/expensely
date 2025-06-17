@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { 
-  Search, Filter, Download, Eye, Edit2, Trash2, 
+  Search, Filter, Eye, Edit2, Trash2, 
   ChevronLeft, ChevronRight,
   X, CheckCircle, XCircle, CreditCard, Receipt as ReceiptIcon,
   ArrowUpDown, ArrowUp, ArrowDown
@@ -10,6 +10,7 @@ import {
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { Receipt, ReceiptFilters } from '@/types/receipt';
 import { ReceiptDetailModal } from '@/components/Layout/ReceiptDetailModal';
+import { ExpensesHeader } from '@/components/Expenses/ExpensesHeader';
 
 // Mock data for demonstration
 const mockReceipts: Receipt[] = [
@@ -264,11 +265,11 @@ export default function ExpensesPage() {
 
   if (!currentOrganization) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#fafbfc]">
+      <div className="flex-1 flex items-center justify-center bg-bg-secondary">
         <div className="text-center">
-          <ReceiptIcon className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-800">No Organization Selected</h3>
-          <p className="text-gray-500">Please select an organization to view expenses.</p>
+          <ReceiptIcon className="w-16 h-16 text-secondary-200 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-text-primary">No Organization Selected</h3>
+          <p className="text-text-secondary">Please select an organization to view expenses.</p>
         </div>
       </div>
     );
@@ -278,46 +279,33 @@ export default function ExpensesPage() {
     <div className="flex-1 overflow-auto">
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">Expenses</h1>
-              <p className="text-gray-500 mt-2 text-lg">
-                Manage and review all your receipt expenses
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <div className="text-2xl font-bold text-gray-800">
-                  {formatCurrency(filteredReceipts.reduce((sum, receipt) => sum + receipt.totalAmount, 0))}
-                </div>
-                <div className="text-sm text-gray-500">Total Expenses</div>
-              </div>
-              <button className="flex items-center space-x-2 px-6 py-3 bg-[#19e2c0] text-white rounded-xl hover:bg-[#13c6a7] transition-all duration-200">
-                <Download className="w-5 h-5" />
-                <span>Export</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <ExpensesHeader
+          title="Expenses"
+          description="Manage and review all your receipt expenses"
+          totalAmount={filteredReceipts.reduce((sum, receipt) => sum + receipt.totalAmount, 0)}
+          onActionClick={() => {
+            // Handle export functionality
+            console.log('Export clicked');
+          }}
+        />
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8">
+        <div className="bg-bg-primary rounded-2xl border border-border-primary p-6 mb-8">
           <div className="flex items-center space-x-4 mb-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted" />
               <input
                 type="text"
                 placeholder="Search by vendor, description, or document ID..."
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19e2c0] focus:border-[#19e2c0] transition-all duration-200"
+                className="w-full pl-10 pr-4 py-3 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200"
               />
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-200 ${
-                showFilters ? 'bg-[#19e2c0] text-white' : 'border border-[#19e2c0] text-[#19e2c0] hover:bg-[#19e2c0] hover:text-white'
+                showFilters ? 'bg-accent text-text-inverse' : 'border border-accent text-accent hover:bg-accent hover:text-text-inverse'
               }`}
             >
               <Filter className="w-5 h-5" />
@@ -431,24 +419,24 @@ export default function ExpensesPage() {
 
         {/* Results Summary */}
         <div className="flex items-center justify-between mb-6">
-          <div className="text-gray-700">
+          <div className="text-text-secondary">
             Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredReceipts.length)} of {filteredReceipts.length} expenses
           </div>
-          <div className="text-sm text-gray-400">
+          <div className="text-sm text-text-muted">
             {filteredReceipts.filter(r => r.isDeductible).length} tax deductible
           </div>
         </div>
 
         {/* Receipts Table */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="bg-bg-primary rounded-2xl border border-border-primary overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-[#fafbfc] border-b border-gray-200">
+              <thead className="bg-bg-secondary border-b border-border-primary">
                 <tr>
                   <th className="px-6 py-4 text-left">
                     <button
                       onClick={() => handleSort('date')}
-                      className="flex items-center space-x-2 text-sm font-semibold text-gray-700 hover:text-[#19e2c0] transition-colors"
+                      className="flex items-center space-x-2 text-sm font-semibold text-text-secondary hover:text-accent transition-colors"
                     >
                       <span>Date</span>
                       {getSortIcon('date')}
@@ -457,7 +445,7 @@ export default function ExpensesPage() {
                   <th className="px-6 py-4 text-left">
                     <button
                       onClick={() => handleSort('vendor')}
-                      className="flex items-center space-x-2 text-sm font-semibold text-gray-700 hover:text-[#19e2c0] transition-colors"
+                      className="flex items-center space-x-2 text-sm font-semibold text-text-secondary hover:text-accent transition-colors"
                     >
                       <span>Vendor</span>
                       {getSortIcon('vendor')}
@@ -466,7 +454,7 @@ export default function ExpensesPage() {
                   <th className="px-6 py-4 text-left">
                     <button
                       onClick={() => handleSort('category')}
-                      className="flex items-center space-x-2 text-sm font-semibold text-gray-700 hover:text-[#19e2c0] transition-colors"
+                      className="flex items-center space-x-2 text-sm font-semibold text-text-secondary hover:text-accent transition-colors"
                     >
                       <span>Category</span>
                       {getSortIcon('category')}
@@ -475,15 +463,15 @@ export default function ExpensesPage() {
                   <th className="px-6 py-4 text-left">
                     <button
                       onClick={() => handleSort('amount')}
-                      className="flex items-center space-x-2 text-sm font-semibold text-gray-700 hover:text-[#19e2c0] transition-colors"
+                      className="flex items-center space-x-2 text-sm font-semibold text-text-secondary hover:text-accent transition-colors"
                     >
                       <span>Amount</span>
                       {getSortIcon('amount')}
                     </button>
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Payment</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-700">Actions</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Payment</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Status</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -516,13 +504,13 @@ export default function ExpensesPage() {
                       <div className="flex items-center space-x-2">
                         {receipt.isDeductible ? (
                           <>
-                            <CheckCircle className="w-4 h-4 text-[#19e2c0]" />
-                            <span className="text-xs font-medium text-[#19e2c0]">Deductible</span>
+                                                              <CheckCircle className="w-4 h-4 text-success-green" />
+                                  <span className="text-xs font-medium text-success-green">Deductible</span>
                           </>
                         ) : (
                           <>
-                            <XCircle className="w-4 h-4 text-gray-400" />
-                            <span className="text-xs text-gray-400">Non-deductible</span>
+                            <XCircle className="w-4 h-4 text-text-muted" />
+                            <span className="text-xs text-text-muted">Non-deductible</span>
                           </>
                         )}
                       </div>
@@ -531,19 +519,19 @@ export default function ExpensesPage() {
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => setSelectedReceipt(receipt)}
-                          className="p-2 text-gray-400 hover:text-[#19e2c0] hover:bg-[#e6fcf7] rounded-lg transition-all duration-200"
+                          className="p-2 text-text-muted hover:text-accent hover:bg-bg-accent rounded-lg transition-all duration-200"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
-                          className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                          className="p-2 text-text-muted hover:text-text-primary hover:bg-bg-muted rounded-lg transition-all duration-200"
                           title="Edit"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
+                          className="p-2 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />

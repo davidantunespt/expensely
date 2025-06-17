@@ -47,7 +47,7 @@ export function SummaryCards({ totalExpenses, taxDeductible, currentMonth }: Sum
 
       {/* Upload Receipt Action Card */}
       <Box 
-        style={{ backgroundColor: '#1f2937' }} 
+
         className="text-white border-gray-600"
       >
         <div className="flex items-center justify-between">
@@ -56,7 +56,7 @@ export function SummaryCards({ totalExpenses, taxDeductible, currentMonth }: Sum
             <p className="text-lg font-semibold mb-3">Upload Receipt</p>
             <button 
               className="px-4 py-2 rounded-lg font-medium text-base hover:bg-gray-100 transition-colors flex items-center space-x-2 text-gray-800"
-              style={{ backgroundColor: '#f9f8f5' }}
+
             >
               <Plus className="w-4 h-4" />
               <span>Upload Receipt</span>

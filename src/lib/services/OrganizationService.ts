@@ -9,11 +9,15 @@ import {
 export type CreateOrganizationData = {
   name: string;
   description?: string;
+  color?: string;
+  avatar?: string;
 };
 
 export type UpdateOrganizationData = {
   name?: string;
   description?: string;
+  color?: string;
+  avatar?: string;
 };
 
 export type AddMemberData = {
@@ -40,6 +44,8 @@ export class OrganizationService {
           name: data.name,
           description: data.description,
           ownerId,
+          color: data.color,
+          avatar: data.avatar,
         },
         include: {
           owner: true,
@@ -182,6 +188,8 @@ export class OrganizationService {
       data: {
         name: data.name,
         description: data.description,
+        color: data.color,
+        avatar: data.avatar,
         updatedAt: new Date(),
       },
       include: {

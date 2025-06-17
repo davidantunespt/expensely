@@ -18,13 +18,32 @@ export class ProfileService {
   /**
    * Create a new user profile (called after Supabase signup)
    */
-  static async createProfile(data: CreateProfileData): Promise<Profile> {
+  static async createProfile(data: CreateProfileData) {
     return await prisma.profile.create({
       data: {
         id: data.id,
         firstName: data.firstName,
         lastName: data.lastName,
         displayName: data.displayName || `${data.firstName} ${data.lastName}`,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        displayName: true,
+        createdAt: true,
+        updatedAt: true,
+        defaultOrganization: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        organizations: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
   }

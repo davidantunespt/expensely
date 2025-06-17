@@ -49,8 +49,8 @@ export function OrganizationSelector() {
   if (isLoading) {
     return (
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-gray-200 rounded-xl animate-pulse"></div>
-        <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+        <div className="w-10 h-10 bg-secondary-200 rounded-xl animate-pulse"></div>
+        <div className="h-4 bg-secondary-200 rounded w-32 animate-pulse"></div>
       </div>
     );
   }
@@ -58,10 +58,10 @@ export function OrganizationSelector() {
   if (!currentOrganization) {
     return (
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
-          <span className="text-gray-400 text-xs">?</span>
+        <div className="w-10 h-10 bg-secondary-200 rounded-xl flex items-center justify-center">
+          <span className="text-text-muted text-xs">?</span>
         </div>
-        <span className="text-gray-500">No organization selected</span>
+        <span className="text-text-muted">No organization selected</span>
       </div>
     );
   }
@@ -70,10 +70,10 @@ export function OrganizationSelector() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-100 transition-all duration-200 group border border-transparent hover:border-gray-200"
+        className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-bg-muted transition-all duration-200 group border border-transparent hover:border-border-secondary cursor-pointer"
       >
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm"
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-text-inverse font-bold text-sm"
           style={{ backgroundColor: currentOrganization.color }}
         >
           {currentOrganization.avatar ||
@@ -81,34 +81,34 @@ export function OrganizationSelector() {
         </div>
 
         <div className="flex-1 text-left">
-          <div className="font-semibold text-gray-900 truncate max-w-48">
+          <div className="font-semibold text-text-primary truncate max-w-48">
             {currentOrganization.name}
           </div>
-          <div className="text-xs text-gray-600">
+          <div className="text-xs text-text-secondary">
             {currentOrganization.memberCount}{" "}
             {currentOrganization.memberCount === 1 ? "member" : "members"}
           </div>
         </div>
 
         <ChevronDown
-          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+          className={`w-5 h-5 text-text-muted transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
           }`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-gray-200 py-3 z-50 min-w-80 shadow-lg">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-bg-primary rounded-2xl border border-border-primary py-3 z-50 min-w-80 shadow-lg">
           {/* Search */}
           <div className="px-4 pb-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-muted" />
               <input
                 type="text"
                 placeholder="Search organizations..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 transition-all duration-200"
+                className="w-full pl-10 pr-4 py-3 border-2 border-border-primary rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200"
               />
             </div>
           </div>
@@ -119,47 +119,47 @@ export function OrganizationSelector() {
               <button
                 key={org.id}
                 onClick={() => handleOrganizationSelect(org)}
-                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-gray-100 transition-all duration-200"
+                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-bg-muted transition-all duration-200"
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-text-inverse font-bold text-sm"
                   style={{ backgroundColor: org.color }}
                 >
                   {org.avatar || org.name.charAt(0).toUpperCase()}
                 </div>
 
                 <div className="flex-1 text-left">
-                  <div className="font-semibold text-gray-900 truncate">
+                  <div className="font-semibold text-text-primary truncate">
                     {org.name}
                   </div>
-                  <div className="text-xs text-gray-600 truncate">
+                  <div className="text-xs text-text-secondary truncate">
                     {org.description || `${org.memberCount} members`}
                   </div>
                 </div>
 
                 {currentOrganization.id === org.id && (
-                  <Check className="w-5 h-5 text-gray-700" />
+                  <Check className="w-5 h-5 text-accent" />
                 )}
               </button>
             ))}
           </div>
 
           {filteredOrganizations.length === 0 && (
-            <div className="px-4 py-6 text-center text-gray-500">
+            <div className="px-4 py-6 text-center text-text-muted">
               No organizations found
             </div>
           )}
 
           {/* Actions */}
-          <div className="border-t border-gray-200 mt-3 pt-3">
+          <div className="border-t border-border-primary mt-3 pt-3">
             <button
               onClick={() => {
                 setShowManagementModal(true);
                 setIsOpen(false);
               }}
-              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-gray-100 transition-all duration-200 text-gray-900 font-medium"
+              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-bg-muted transition-all duration-200 text-text-primary font-medium"
             >
-              <Settings className="w-5 h-5 text-gray-700" />
+              <Settings className="w-5 h-5 text-accent" />
               <span>Manage Organizations</span>
             </button>
           </div>

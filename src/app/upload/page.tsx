@@ -106,7 +106,7 @@ export default function UploadReceipt() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Header Section */}
       <UploadHeader />
 
@@ -122,39 +122,39 @@ export default function UploadReceipt() {
 
       {/* Three-Step Flow Guide - Only shows when no files are processed */}
       {processedFiles.length === 0 && (
-        <div className="mb-4">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">How it works</h3>
+        <div className="mb-8">
+          <div className="bg-bg-primary rounded-2xl border border-border-primary p-6">
+            <h3 className="text-lg font-semibold text-text-primary mb-4 text-center">How it works</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Step 1 */}
               <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl font-bold text-blue-600">1</span>
+                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl font-bold text-primary">1</span>
                 </div>
-                <h4 className="font-semibold text-gray-900 mb-2">Upload & Process</h4>
-                <p className="text-sm text-gray-600">
+                <h4 className="font-semibold text-text-primary mb-2">Upload & Process</h4>
+                <p className="text-sm text-text-secondary">
                   Upload your receipt files and let our AI extract the data automatically
                 </p>
               </div>
 
               {/* Step 2 */}
               <div className="text-center">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl font-bold text-green-600">2</span>
+                <div className="w-12 h-12 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl font-bold text-accent">2</span>
                 </div>
-                <h4 className="font-semibold text-gray-900 mb-2">Review & Edit</h4>
-                <p className="text-sm text-gray-600">
+                <h4 className="font-semibold text-text-primary mb-2">Review & Edit</h4>
+                <p className="text-sm text-text-secondary">
                   Review the extracted data and make any necessary corrections
                 </p>
               </div>
 
               {/* Step 3 */}
               <div className="text-center">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl font-bold text-purple-600">3</span>
+                <div className="w-12 h-12 bg-success-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl font-bold text-success-green">3</span>
                 </div>
-                <h4 className="font-semibold text-gray-900 mb-2">Save!</h4>
-                <p className="text-sm text-gray-600">
+                <h4 className="font-semibold text-text-primary mb-2">Save!</h4>
+                <p className="text-sm text-text-secondary">
                   Mark receipts as reviewed and save them to your expense tracker
                 </p>
               </div>
@@ -176,24 +176,24 @@ export default function UploadReceipt() {
 
           {/* Ready to Save Section */}
           <div className="mt-10 w-full">
-            <div className="bg-white border border-gray-200 rounded-xl p-8 flex flex-col items-center">
-              <div className="font-bold text-lg mb-2 text-center text-gray-900">Ready to Save</div>
-              <div className="text-gray-700 text-center mb-6">
+            <div className="bg-bg-primary border border-border-primary rounded-2xl p-8 flex flex-col items-center">
+              <div className="font-bold text-lg mb-2 text-center text-text-primary">Ready to Save</div>
+              <div className="text-text-secondary text-center mb-6">
                 {processedFiles.filter(f => f.isReviewed).length} of {processedFiles.length} receipts reviewed. You can save reviewed receipts or review remaining items.
               </div>
               <button
-                className={`px-8 py-3 rounded-lg font-medium text-lg mb-2 transition-colors flex items-center justify-center ${processedFiles.some(f => f.isReviewed) && !isSaving ? 'bg-gray-600 text-white hover:bg-gray-700 cursor-pointer' : 'bg-gray-400 text-white cursor-not-allowed'}`}
+                className={`px-8 py-3 rounded-xl font-medium text-lg mb-2 transition-all duration-200 flex items-center justify-center ${processedFiles.some(f => f.isReviewed) && !isSaving ? 'bg-primary text-text-inverse hover:bg-primary-700 cursor-pointer' : 'bg-secondary-400 text-text-muted cursor-not-allowed'}`}
                 disabled={!processedFiles.some(f => f.isReviewed) || isSaving}
                 onClick={handleSaveReceipts}
               >
                 {isSaving ? (
-                  <span className="flex items-center"><svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>Saving...</span>
+                  <span className="flex items-center"><svg className="animate-spin h-5 w-5 mr-2 text-text-inverse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>Saving...</span>
                 ) : (
                   'Save Receipts'
                 )}
               </button>
               {saveSuccess && (
-                <div className="text-green-600 mt-2">Receipts saved successfully!</div>
+                <div className="text-success-green mt-2">Receipts saved successfully!</div>
               )}
               {saveError && (
                 <div className="text-red-600 mt-2">{saveError}</div>

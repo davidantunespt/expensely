@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileService } from "@/lib/services/ProfileService";
+import { OrganizationService } from "../../../lib/services/OrganizationService";
 
 /**
  * GET /api/profile
@@ -74,6 +75,10 @@ export async function POST(request: NextRequest) {
       firstName,
       lastName,
       displayName: displayName || `${firstName} ${lastName}`,
+    });
+
+    await OrganizationService.createOrganization(user.id, {
+      name: "Default Organization",
     });
 
     return NextResponse.json(

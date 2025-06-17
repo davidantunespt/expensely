@@ -24,10 +24,10 @@ export function Button({
   const baseClasses = 'flex items-center justify-center rounded-lg font-medium transition-colors cursor-pointer';
   
   const variantClasses = {
-    primary: 'bg-gray-800 text-white hover:bg-gray-700 disabled:bg-gray-400',
-    secondary: 'border border-gray-300 text-gray-700 hover:bg-gray-200 disabled:bg-gray-100',
-    success: 'bg-green-600 text-white hover:bg-green-700 disabled:bg-green-400',
-    danger: 'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400'
+    primary: 'bg-primary text-text-inverse hover:bg-primary-800 disabled:bg-primary-400',
+    secondary: 'border border-border-secondary bg-bg-primary text-text-primary hover:bg-bg-muted disabled:bg-secondary-200',
+    success: 'bg-success-green text-text-primary hover:bg-success-green-700 disabled:bg-success-green-400',
+    danger: 'bg-red-600 text-text-inverse hover:bg-red-700 disabled:bg-red-400'
   };
 
   const sizeClasses = {

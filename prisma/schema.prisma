@@ -49,6 +49,9 @@ model Organization {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  color  String? @map("color")
+  avatar String? @map("avatar")
+
   // Relationships
   owner              Profile              @relation("OrganizationOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members            OrganizationMember[]
