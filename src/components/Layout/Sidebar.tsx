@@ -16,6 +16,9 @@ import {
   LogOut
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { OrganizationManagement } from '@/components/Layout/OrganizationManagement';
+import { useOrganization } from '@/contexts/OrganizationContext';
+import { OrganizationSelector } from '@/components/Layout/OrganizationSelector';
 
 // Navigation items based on the app requirements
 const navigationItems = [
@@ -87,6 +90,8 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<{ first_name: string | null; last_name: string | null } | null>(null);
   const [signingOut, setSigningOut] = useState(false);
+  const [isManagementOpen, setIsManagementOpen] = useState(false);
+  const { currentOrganization } = useOrganization() || { currentOrganization: null };
 
   // Fetch user profile data using ProfileService
   useEffect(() => {
@@ -195,6 +200,10 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
         })}
       </nav>
 
+      <OrganizationManagement
+        isOpen={isManagementOpen}
+        onClose={() => setIsManagementOpen(false)}
+      />
       {/* Bottom Navigation */}
       <div className="px-4 py-6 border-t border-gray-300 space-y-2">
         {bottomNavItems.map((item) => {

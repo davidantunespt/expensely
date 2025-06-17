@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Sidebar } from './Sidebar'
+import { Header } from './Header'
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -41,6 +42,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       
       {/* Main Content Area - Offset by sidebar width */}
       <div className="ml-64 min-h-screen">
+        {/* Sticky Header at the top */}
+        <Header />
         <main className="h-screen overflow-y-auto">
           <div className="p-6">
             {children}
