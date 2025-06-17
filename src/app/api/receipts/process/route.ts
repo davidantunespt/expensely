@@ -2,6 +2,7 @@ import { processReceiptFile } from "@/lib/services/ReceiptProcessor";
 import { verifyAccess } from "@/lib/utils/access";
 import { getUserFromRequest } from "@/lib/utils/request";
 import { NextRequest, NextResponse } from "next/server";
+import { UnauthorizedError } from "@/lib/errors";
 
 /**
  * POST /api/receipts/process
@@ -9,6 +10,11 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function POST(request: NextRequest) {
   try {
+    const user = getUserFromRequest(request);
+
+    // Verify organization access
+    await verifyAccess(user.id, user.organizationId);
+
     // Get the uploaded file and organization from form data
     const formData = await request.formData();
     const file = formData.get("file") as File;
@@ -23,11 +29,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const user = getUserFromRequest(request);
-
-    // Verify organization access
-    await verifyAccess(user.id, user.organizationId);
 
     // Validate file type and size
     const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
@@ -105,19 +106,18 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     console.error("Receipt processing error:", error);
 
-    // Handle specific error types
-    if (error instanceof Error) {
-      if (error.message.includes("access")) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: error.message,
-            extractedAt: new Date().toISOString(),
-          },
-          { status: 403 }
-        );
-      }
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: error.message,
+          extractedAt: new Date().toISOString(),
+        },
+        { status: 401 }
+      );
+    }
 
+    if (error instanceof Error) {
       if (error.message.includes("Invalid file")) {
         return NextResponse.json(
           {

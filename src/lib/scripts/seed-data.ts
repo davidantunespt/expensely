@@ -50,7 +50,6 @@ const sampleReceipts = [
     paymentMethod: "Credit Card",
     taxAmount: 89.99,
     confidence: 100,
-    organizationId: "1234567890",
   },
   {
     documentType: "Invoice",
@@ -62,7 +61,6 @@ const sampleReceipts = [
     paymentMethod: "Cash",
     taxAmount: 12.5,
     confidence: 100,
-    organizationId: "1234567890",
   },
   {
     documentType: "Invoice",
@@ -74,7 +72,6 @@ const sampleReceipts = [
     paymentMethod: "Credit Card",
     taxAmount: 25.75,
     confidence: 100,
-    organizationId: "1234567890",
   },
   {
     vendor: "AWS",
@@ -149,19 +146,23 @@ async function main() {
         const receiptDate = new Date();
         receiptDate.setDate(receiptDate.getDate() - randomDaysAgo);
 
-        await ReceiptService.createReceipt(firstUser.id, {
-          documentType: DocumentType.INVOICE,
-          documentId: receiptData.documentId ?? "",
-          documentDate: receiptDate.toISOString(),
-          category: receiptData.category as Category,
-          description: receiptData.description,
-          isDeductible: receiptData.isDeductible ?? true,
-          paymentMethod: receiptData.paymentMethod,
-          taxAmount: receiptData.taxAmount ?? 0,
-          confidence: receiptData.confidence ?? 0,
-          organizationId: receiptData.organizationId ?? "",
-          totalAmount: receiptData.amount ?? 0,
-        });
+        await ReceiptService.createReceipt(
+          "123e4567-e89b-12d3-a456-426614174000",
+          firstUser.id,
+          {
+            documentType: DocumentType.INVOICE,
+            documentId: receiptData.documentId ?? "",
+            documentDate: receiptDate.toISOString(),
+            category: receiptData.category as Category,
+            description: receiptData.description,
+            isDeductible: receiptData.isDeductible ?? true,
+            paymentMethod: receiptData.paymentMethod,
+            taxAmount: receiptData.taxAmount ?? 0,
+            confidence: receiptData.confidence ?? 0,
+            totalAmount: receiptData.amount ?? 0,
+            items: receiptData.items,
+          }
+        );
 
         console.log(
           `✅ Created receipt: ${receiptData.vendor} - $${receiptData.amount}`
@@ -173,7 +174,9 @@ async function main() {
     // Show summary
     console.log("📊 Seeding summary:");
     const profileCount = await ProfileService.getProfileCount();
-    const receiptCount = await ReceiptService.getReceiptCount();
+    const receiptCount = await ReceiptService.getReceiptCount(
+      "123e4567-e89b-12d3-a456-426614174000"
+    );
 
     console.log(`   - Total profiles: ${profileCount}`);
     console.log(`   - Total receipts: ${receiptCount}`);
@@ -183,7 +186,10 @@ async function main() {
     if (createdProfiles.length > 0) {
       const firstUser = createdProfiles[0];
       console.log(`💰 Expense summary for ${firstUser.displayName}:`);
-      const summary = await ReceiptService.getUserExpenseSummary(firstUser.id);
+      const summary = await ReceiptService.getUserExpenseSummary(
+        "123e4567-e89b-12d3-a456-426614174000",
+        firstUser.id
+      );
       console.log(`   - Total expenses: $${summary.totalExpenses.toFixed(2)}`);
       console.log(
         `   - Tax deductible: $${summary.taxDeductibleExpenses.toFixed(2)}`

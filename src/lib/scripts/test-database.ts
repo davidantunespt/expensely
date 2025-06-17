@@ -47,7 +47,9 @@ async function main() {
     // Test 2: Count existing receipts (public schema - should work)
     console.log("🧾 Checking existing receipts...");
     try {
-      const receiptsCount = await ReceiptService.getReceiptCount();
+      const receiptsCount = await ReceiptService.getReceiptCount(
+        "123e4567-e89b-12d3-a456-426614174000"
+      );
       console.log(`✅ Found ${receiptsCount} receipts in database`);
     } catch {
       console.log("⚠️  Could not access receipts table");

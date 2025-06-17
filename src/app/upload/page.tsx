@@ -16,11 +16,14 @@ interface ProcessedFile {
   isDiscarding?: boolean;
   documentUrl: string;
   preview?: string;
+  file: File;
 }
 
 export default function UploadReceipt() {
   const [processedFiles, setProcessedFiles] = useState<ProcessedFile[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const fileUploadAreaRef = useRef<FileUploadAreaRef>(null);
 
   const handleFileProcessed = (fileId: string, extractedData: ReceiptData) => {
@@ -37,6 +40,7 @@ export default function UploadReceipt() {
         isCollapsed: false,
         documentUrl: file?.preview || '',
         preview: file?.preview || '',
+        file: file?.file || new File([], ''),
       }
     ]);
   };
@@ -59,28 +63,43 @@ export default function UploadReceipt() {
     fileUploadAreaRef.current?.updateFileStatus(fileId, 'rejected');
   };
 
-  const handleBulkSave = async () => {
+  const handleSaveReceipts = async () => {
     setIsSaving(true);
-    
-    // Get only reviewed files
-    const reviewedFiles = processedFiles.filter(file => file.isReviewed);
+    setSaveSuccess(false);
+    setSaveError(null);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      console.log("processedFiles", processedFiles);
+      // Get only reviewed files
+      const reviewedFiles = processedFiles.filter(file => file.isReviewed);
       
-      // In a real app, you would call your API here
-      console.log('Saving receipts:', reviewedFiles);
-      
-      // Show success message or redirect
-      alert(`Successfully saved ${reviewedFiles.length} receipt${reviewedFiles.length !== 1 ? 's' : ''}!`);
-      
-      // Reset the form or redirect to dashboard
+      // Process each file one at a time
+      for (const file of reviewedFiles) {
+        const originalFile = fileUploadAreaRef.current?.getFile(file.fileId)?.file;
+        if (originalFile) {
+          const formData = new FormData();
+          formData.append('file', originalFile);
+          formData.append('meta', JSON.stringify(file.data));
+
+          const response = await fetch('/api/receipts', {
+            method: 'POST',
+            body: formData,
+          });
+
+          const result = await response.json();
+          
+          if (!response.ok || !result.success) {
+            throw new Error(result.error || result.message || 'Failed to save receipt.');
+          }
+        }
+      }
+
+      // If all receipts were saved successfully
+      setSaveSuccess(true);
       setProcessedFiles([]);
       
-    } catch (error) {
-      console.error('Error saving receipts:', error);
-      alert('Error saving receipts. Please try again.');
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save receipts.');
     } finally {
       setIsSaving(false);
     }
@@ -96,7 +115,6 @@ export default function UploadReceipt() {
         <FileUploadArea 
           onFileProcessed={handleFileProcessed} 
           ref={fileUploadAreaRef}
-          // Add any additional props needed by FileUploadArea
           accept="image/jpeg,image/png,application/pdf"
           maxSize={10 * 1024 * 1024} // 10MB
         />
@@ -147,16 +165,47 @@ export default function UploadReceipt() {
 
       {/* Receipt Data Display - Only shows when files are processed */}
       {processedFiles.length > 0 && (
-        <div className="mb-4">
-          <ReceiptDataDisplay 
-            processedFiles={processedFiles}
-            onFileUpdated={handleFileUpdated}
-            onDiscardFile={handleDiscardProcessedFile}
-            onBulkSave={handleBulkSave}
-            isSaving={isSaving}
-            setProcessedFiles={setProcessedFiles}
-          />
-        </div>
+        <>
+          <div className="mb-4">
+            <ReceiptDataDisplay 
+              processedFiles={processedFiles}
+              onFileUpdated={handleFileUpdated}
+              onDiscardFile={handleDiscardProcessedFile}
+            />
+          </div>
+
+          {/* Ready to Save Section */}
+          <div className="mt-10 w-full">
+            <div className="bg-white border border-gray-200 rounded-xl p-8 flex flex-col items-center">
+              <div className="font-bold text-lg mb-2 text-center text-gray-900">Ready to Save</div>
+              <div className="text-gray-700 text-center mb-6">
+                {processedFiles.filter(f => f.isReviewed).length} of {processedFiles.length} receipts reviewed. You can save reviewed receipts or review remaining items.
+              </div>
+              <button
+                className={`px-8 py-3 rounded-lg font-medium text-lg mb-2 transition-colors flex items-center justify-center ${processedFiles.some(f => f.isReviewed) && !isSaving ? 'bg-gray-600 text-white hover:bg-gray-700 cursor-pointer' : 'bg-gray-400 text-white cursor-not-allowed'}`}
+                disabled={!processedFiles.some(f => f.isReviewed) || isSaving}
+                onClick={handleSaveReceipts}
+              >
+                {isSaving ? (
+                  <span className="flex items-center"><svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>Saving...</span>
+                ) : (
+                  'Save Receipts'
+                )}
+              </button>
+              {saveSuccess && (
+                <div className="text-green-600 mt-2">Receipts saved successfully!</div>
+              )}
+              {saveError && (
+                <div className="text-red-600 mt-2">{saveError}</div>
+              )}
+              {!processedFiles.some(f => f.isReviewed) && (
+                <div className="text-xs text-gray-500 mt-1 text-center">
+                  Mark at least one receipt as reviewed to enable saving
+                </div>
+              )}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

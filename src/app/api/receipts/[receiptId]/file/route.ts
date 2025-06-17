@@ -4,6 +4,7 @@ import { PrismaClient } from "@/generated/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { getUserFromRequest } from "../../../../../lib/utils/request";
 import { type NextRequest } from "next/server";
+import { UnauthorizedError } from "@/lib/errors";
 
 const fileService = new FileService();
 const prisma = new PrismaClient();
@@ -31,7 +32,7 @@ async function verifyAccess(
   });
 
   if (!membership) {
-    throw new Error("You do not have access to this organization");
+    throw new UnauthorizedError("You do not have access to this organization");
   }
 
   // Check receipt ownership/access
@@ -77,14 +78,13 @@ export async function POST(
     );
 
     return NextResponse.json(fileData);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Upload error:", error);
 
-    // Handle specific error types
-    if (error.message?.includes("access")) {
-      return NextResponse.json({ error: error.message }, { status: 403 });
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
     }
-    if (error.message?.includes("Invalid file")) {
+    if (error instanceof Error && error.message?.includes("Invalid file")) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
@@ -136,12 +136,11 @@ export async function DELETE(
 
     await fileService.deleteReceiptFile(params.receiptId);
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Delete error:", error);
 
-    // Handle specific error types
-    if (error.message?.includes("access")) {
-      return NextResponse.json({ error: error.message }, { status: 403 });
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
     }
 
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });

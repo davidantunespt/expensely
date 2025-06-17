@@ -1,27 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { ReceiptService } from "@/lib/services/ReceiptService";
-import { Category } from "../../../generated/prisma";
+import {
+  CreateReceiptData,
+  ReceiptService,
+} from "@/lib/services/ReceiptService";
+import { verifyAccess } from "@/lib/utils/access";
+import { getUserFromRequest } from "@/lib/utils/request";
+import { UnauthorizedError } from "@/lib/errors";
 
 /**
  * GET /api/receipts
  * Get all receipts for the authenticated user
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user from Supabase
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const user = getUserFromRequest(request);
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Verify organization access
+    await verifyAccess(user.id, user.organizationId);
 
     // Use Prisma service to get receipts
-    const receipts = await ReceiptService.getUserReceipts(user.id);
+    const receipts = await ReceiptService.getUserReceipts(
+      user.organizationId,
+      user.id
+    );
 
     return NextResponse.json({
       success: true,
@@ -29,6 +30,9 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching receipts:", error);
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -42,66 +46,49 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user from Supabase
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const user = getUserFromRequest(request);
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Verify organization access
+    await verifyAccess(user.id, user.organizationId);
 
-    // Parse request body
-    const body = await request.json();
-    const {
-      vendor,
-      amount,
-      date,
-      category,
-      description,
-      isDeductible,
-      paymentMethod,
-      taxAmount,
-      confidence,
-      organizationId,
-    } = body;
+    // Parse FormData
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+    const meta = JSON.parse(
+      formData.get("meta") as string
+    ) as CreateReceiptData;
 
-    // Validate required fields
-    if (!vendor || !amount || !date || !category) {
+    if (!file || !meta) {
       return NextResponse.json(
-        { error: "Missing required fields: vendor, amount, date, category" },
+        { error: "Missing required fields: file and meta" },
         { status: 400 }
       );
     }
 
-    // Create receipt using Prisma service
-    const receipt = await ReceiptService.createReceipt(user.id, {
-      category: category as Category,
-      documentType: "INVOICE",
-      documentId: "1234567890",
-      documentDate: new Date(date).toISOString(),
-      description,
-      isDeductible: isDeductible ?? true,
-      paymentMethod,
-      taxAmount: taxAmount ? parseFloat(taxAmount) : 0,
-      confidence: confidence ? parseInt(confidence) : 0,
-      organizationId: organizationId ?? "",
-      totalAmount: amount ? parseFloat(amount) : 0,
-    });
+    const createdReceipt = await ReceiptService.createReceipt(
+      user.organizationId,
+      user.id,
+      { ...meta, file }
+    );
 
     return NextResponse.json(
       {
         success: true,
-        data: receipt,
+        data: createdReceipt,
       },
       { status: 201 }
     );
-  } catch (error) {
-    console.error("Error creating receipt:", error);
+  } catch (error: unknown) {
+    console.error("Error creating receipts:", error);
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        success: false,
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

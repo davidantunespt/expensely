@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { Category, DocumentType, Receipt } from "@/generated/prisma";
+import { FileService } from "@/lib/services/FileService";
+import { v4 as uuidv4 } from "uuid";
+
+const fileService = new FileService();
 
 export type CreateReceiptData = {
   documentType: DocumentType;
@@ -7,12 +11,24 @@ export type CreateReceiptData = {
   documentDate: string;
   category: Category;
   description: string;
+  qrCode: string;
+  vendor: string;
   isDeductible: boolean;
   paymentMethod: string;
+  countryCode: string;
+  countryName: string;
+  issuerVatNumber: string;
+  buyerVatNumber: string;
   taxAmount: number;
   totalAmount: number;
   confidence: number;
-  organizationId: string;
+  file: File;
+  items: {
+    name: string;
+    quantity: number;
+    tax: number;
+    total: number;
+  }[];
 };
 
 export type UpdateReceiptData = Partial<CreateReceiptData>;
@@ -22,29 +38,57 @@ export class ReceiptService {
    * Create a new receipt for a user
    */
   static async createReceipt(
+    organizationId: string,
     userId: string,
     data: CreateReceiptData
   ): Promise<Receipt> {
-    return await prisma.receipt.create({
+    const fileId = uuidv4();
+
+    console.log("organizationId", organizationId);
+    console.log("userId", userId);
+    console.log("data", data);
+
+    const createdReceipt = await prisma.receipt.create({
       data: {
+        organizationId: organizationId,
         addedById: userId,
         totalAmount: data.totalAmount,
-        createdAt: new Date(),
-        category: data.category,
-        isDeductible: data.isDeductible ?? true,
+        category: data.category?.toUpperCase() as Category, // TODO: make this val with zod in controller
+        isDeductible: data.isDeductible ?? false,
         paymentMethod: data.paymentMethod,
         taxAmount: data.taxAmount,
         confidence: data.confidence,
+        documentType: data.documentType?.toUpperCase() as DocumentType, // TODO: make this val with zod in controller
+        documentId: data.documentId,
+        documentDate: new Date(data.documentDate).toISOString(), // TODO: make this mandatory in controller
+        qrCode: data.qrCode,
+        vendor: data.vendor,
+        countryCode: data.countryCode,
+        countryName: data.countryName,
+        issuerVatNumber: data.issuerVatNumber,
+        buyerVatNumber: data.buyerVatNumber,
+        description: data.description,
+        fileOriginalName: data.file.name,
+        fileId,
+        items: data.items,
       },
     });
+
+    await fileService.uploadReceiptFile(organizationId, data.file, fileId);
+
+    return createdReceipt;
   }
 
   /**
    * Get all receipts for a user
    */
-  static async getUserReceipts(userId: string): Promise<Receipt[]> {
+  static async getUserReceipts(
+    organizationId: string,
+    userId: string
+  ): Promise<Receipt[]> {
     return await prisma.receipt.findMany({
       where: {
+        organizationId: organizationId,
         addedById: userId,
       },
       orderBy: {
@@ -58,11 +102,13 @@ export class ReceiptService {
    */
   static async getReceiptById(
     receiptId: string,
+    organizationId: string,
     userId: string
   ): Promise<Receipt | null> {
     return await prisma.receipt.findFirst({
       where: {
         id: receiptId,
+        organizationId: organizationId,
         addedById: userId,
       },
     });
@@ -73,11 +119,16 @@ export class ReceiptService {
    */
   static async updateReceipt(
     receiptId: string,
+    organizationId: string,
     userId: string,
     data: UpdateReceiptData
   ): Promise<Receipt | null> {
     // First verify the receipt belongs to the user
-    const existingReceipt = await this.getReceiptById(receiptId, userId);
+    const existingReceipt = await this.getReceiptById(
+      receiptId,
+      organizationId,
+      userId
+    );
     if (!existingReceipt) {
       return null;
     }
@@ -106,12 +157,14 @@ export class ReceiptService {
    */
   static async deleteReceipt(
     receiptId: string,
+    organizationId: string,
     userId: string
   ): Promise<boolean> {
     try {
       const result = await prisma.receipt.deleteMany({
         where: {
           id: receiptId,
+          organizationId: organizationId,
           addedById: userId,
         },
       });
@@ -125,9 +178,10 @@ export class ReceiptService {
   /**
    * Get user's expense summary
    */
-  static async getUserExpenseSummary(userId: string) {
+  static async getUserExpenseSummary(organizationId: string, userId: string) {
     const receipts = await prisma.receipt.findMany({
       where: {
+        organizationId: organizationId,
         addedById: userId,
       },
     });
@@ -162,17 +216,22 @@ export class ReceiptService {
   /**
    * Get total receipt count (for admin/stats purposes)
    */
-  static async getReceiptCount(): Promise<number> {
-    return await prisma.receipt.count();
+  static async getReceiptCount(organizationId: string): Promise<number> {
+    return await prisma.receipt.count({
+      where: {
+        organizationId: organizationId,
+      },
+    });
   }
 
   /**
    * Get expenses by category
    */
-  static async getExpensesByCategory(userId: string) {
+  static async getExpensesByCategory(organizationId: string, userId: string) {
     const categoryData = await prisma.receipt.groupBy({
       by: ["category"],
       where: {
+        organizationId: organizationId,
         addedById: userId,
       },
       _sum: {

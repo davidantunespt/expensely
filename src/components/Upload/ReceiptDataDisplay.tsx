@@ -14,7 +14,9 @@ interface ProcessedFile {
   isCollapsed: boolean;
   isCollapsing?: boolean;
   isDiscarding?: boolean;
+  documentUrl: string;
   preview?: string;
+  file: File;
 }
 
 interface ReceiptDataDisplayProps {
@@ -642,28 +644,6 @@ export function ReceiptDataDisplay({
           </Box>
         ))}
       </div>
-
-      {processedFiles.length > 0 && (
-        <div className="mt-10 w-full">
-          <div className="bg-white border border-gray-200 rounded-xl p-8 flex flex-col items-center">
-            <div className="font-bold text-lg mb-2 text-center text-gray-900">Ready to Save</div>
-            <div className="text-gray-700 text-center mb-6">
-              {processedFiles.filter(f => f.isReviewed).length} of {processedFiles.length} receipts reviewed. You can save reviewed receipts or review remaining items.
-            </div>
-            <button
-              className={`px-8 py-3 rounded-lg font-medium text-lg mb-2 transition-colors ${processedFiles.some(f => f.isReviewed) ? 'bg-gray-600 text-white hover:bg-gray-700 cursor-pointer' : 'bg-gray-400 text-white cursor-not-allowed'}`}
-              disabled={!processedFiles.some(f => f.isReviewed)}
-            >
-              Save Receipts
-            </button>
-            {!processedFiles.some(f => f.isReviewed) && (
-              <div className="text-xs text-gray-500 mt-1 text-center">
-                Mark at least one receipt as reviewed to enable saving
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

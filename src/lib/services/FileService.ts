@@ -152,8 +152,8 @@ export class FileService {
    * Updates receipt record with file information
    */
   private async updateReceiptFileData(fileId: string, fileData: FileMetadata) {
-    await this.prisma.receipt.update({
-      where: { id: fileId },
+    await this.prisma.receipt.updateMany({
+      where: { fileId },
       data: {
         fileUrl: fileData.fileUrl,
         fileName: fileData.fileName,
