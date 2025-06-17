@@ -119,7 +119,7 @@ export function OrganizationSelector() {
               <button
                 key={org.id}
                 onClick={() => handleOrganizationSelect(org)}
-                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-bg-muted transition-all duration-200"
+                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-bg-muted transition-all duration-200 cursor-pointer"
               >
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center text-text-inverse font-bold text-sm"
@@ -157,7 +157,7 @@ export function OrganizationSelector() {
                 setShowManagementModal(true);
                 setIsOpen(false);
               }}
-              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-bg-muted transition-all duration-200 text-text-primary font-medium"
+              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-bg-muted transition-all duration-200 text-text-primary font-medium cursor-pointer"
             >
               <Settings className="w-5 h-5 text-accent" />
               <span>Manage Organizations</span>

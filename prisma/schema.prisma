@@ -21,6 +21,7 @@ datasource db {
 // User profiles table - extends Supabase auth.users
 model Profile {
   id          String   @id
+  email       String   @unique @map("email")
   firstName   String?  @map("first_name")
   lastName    String?  @map("last_name")
   displayName String?  @map("display_name")

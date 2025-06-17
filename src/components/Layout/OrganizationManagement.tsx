@@ -346,7 +346,7 @@ export function OrganizationManagement({ isOpen, onClose }: OrganizationManageme
                               </div>
                               <div className="flex items-center space-x-2 text-text-muted">
                                 <Calendar className="w-4 h-4" />
-                                <span>Created {org.createdAt.toLocaleDateString()}</span>
+                                <span>Created {new Date(org.createdAt).toLocaleDateString()}</span>
                               </div>
                             </div>
                           </div>

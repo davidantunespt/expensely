@@ -5,242 +5,197 @@ import { Organization, OrganizationContextType, Member, Invitation } from '@/typ
 
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
-// Mock data for demonstration with new color palette
-const mockOrganizations: Organization[] = [
-  {
-    id: '1',
-    name: 'Acme Corporation',
-    description: 'Main business organization',
-    color: '#1DE9B6',
-    avatar: 'AC',
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-15'),
-    memberCount: 12,
-    isOwner: true,
-  },
-  {
-    id: '2',
-    name: 'Freelance Projects',
-    description: 'Personal freelance work',
-    color: '#37474F',
-    avatar: 'FP',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-10'),
-    memberCount: 1,
-    isOwner: true,
-  },
-  {
-    id: '3',
-    name: 'Tech Startup Inc.',
-    description: 'Startup company expenses',
-    color: '#FF9100',
-    avatar: 'TS',
-    createdAt: new Date('2024-01-20'),
-    updatedAt: new Date('2024-01-25'),
-    memberCount: 8,
-    isOwner: false,
-  },
-];
-
-const mockMembers: Record<string, Member[]> = {
-  '1': [
-    {
-      id: 'm1',
-      email: 'davidnunes88@gmail.com',
-      name: 'David Nunes',
-      role: 'owner',
-      status: 'active',
-      joinedAt: new Date('2024-01-01'),
-      lastActive: new Date('2024-01-30'),
-    },
-    {
-      id: 'm2',
-      email: 'sarah.johnson@acme.com',
-      name: 'Sarah Johnson',
-      role: 'admin',
-      status: 'active',
-      joinedAt: new Date('2024-01-05'),
-      lastActive: new Date('2024-01-29'),
-    },
-    {
-      id: 'm3',
-      email: 'mike.chen@acme.com',
-      name: 'Mike Chen',
-      role: 'member',
-      status: 'active',
-      joinedAt: new Date('2024-01-10'),
-      lastActive: new Date('2024-01-28'),
-    },
-    {
-      id: 'm4',
-      email: 'lisa.wong@acme.com',
-      name: 'Lisa Wong',
-      role: 'member',
-      status: 'active',
-      joinedAt: new Date('2024-01-15'),
-      lastActive: new Date('2024-01-27'),
-    },
-  ],
-  '2': [
-    {
-      id: 'm5',
-      email: 'davidnunes88@gmail.com',
-      name: 'David Nunes',
-      role: 'owner',
-      status: 'active',
-      joinedAt: new Date('2024-01-10'),
-      lastActive: new Date('2024-01-30'),
-    },
-  ],
-  '3': [
-    {
-      id: 'm6',
-      email: 'founder@techstartup.com',
-      name: 'Alex Rodriguez',
-      role: 'owner',
-      status: 'active',
-      joinedAt: new Date('2024-01-20'),
-      lastActive: new Date('2024-01-30'),
-    },
-    {
-      id: 'm7',
-      email: 'davidnunes88@gmail.com',
-      name: 'David Nunes',
-      role: 'admin',
-      status: 'active',
-      joinedAt: new Date('2024-01-22'),
-      lastActive: new Date('2024-01-29'),
-    },
-  ],
-};
-
-const mockInvitations: Record<string, Invitation[]> = {
-  '1': [
-    {
-      id: 'i1',
-      email: 'john.doe@example.com',
-      role: 'member',
-      invitedBy: 'David Nunes',
-      invitedAt: new Date('2024-01-25'),
-      expiresAt: new Date('2024-02-08'),
-      status: 'pending',
-    },
-    {
-      id: 'i2',
-      email: 'jane.smith@example.com',
-      role: 'admin',
-      invitedBy: 'David Nunes',
-      invitedAt: new Date('2024-01-28'),
-      expiresAt: new Date('2024-02-11'),
-      status: 'pending',
-    },
-  ],
-  '2': [],
-  '3': [
-    {
-      id: 'i3',
-      email: 'developer@example.com',
-      role: 'member',
-      invitedBy: 'Alex Rodriguez',
-      invitedAt: new Date('2024-01-29'),
-      expiresAt: new Date('2024-02-12'),
-      status: 'pending',
-    },
-  ],
-};
-
 interface OrganizationProviderProps {
   children: ReactNode;
 }
 
 export function OrganizationProvider({ children }: OrganizationProviderProps) {
-  const [organizations, setOrganizations] = useState<Organization[]>(mockOrganizations);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [members, setMembers] = useState<Record<string, Member[]>>(mockMembers);
-  const [invitations, setInvitations] = useState<Record<string, Invitation[]>>(mockInvitations);
+  const [members, setMembers] = useState<Record<string, Member[]>>({});
+  const [invitations, setInvitations] = useState<Record<string, Invitation[]>>({});
 
-  useEffect(() => {
-    // Simulate loading and set default organization
-    const timer = setTimeout(() => {
-      const savedOrgId = localStorage.getItem('currentOrganizationId');
-      const defaultOrg = savedOrgId 
-        ? organizations.find(org => org.id === savedOrgId) || organizations[0]
-        : organizations[0];
+  // Fetch organizations from backend
+  const fetchOrganizations = async () => {
+    try {
+      const response = await fetch('/api/organizations');
+      const result = await response.json();
       
-      setCurrentOrganization(defaultOrg);
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [organizations]);
-
-  const handleSetCurrentOrganization = (org: Organization) => {
-    setCurrentOrganization(org);
-    localStorage.setItem('currentOrganizationId', org.id);
-  };
-
-  const createOrganization = (orgData: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newOrg: Organization = {
-      ...orgData,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setOrganizations(prev => [...prev, newOrg]);
-    
-    // Add the creator as owner
-    const ownerMember: Member = {
-      id: `m${Date.now()}`,
-      email: 'davidnunes88@gmail.com',
-      name: 'David Nunes',
-      role: 'owner',
-      status: 'active',
-      joinedAt: new Date(),
-      lastActive: new Date(),
-    };
-    
-    setMembers(prev => ({
-      ...prev,
-      [newOrg.id]: [ownerMember],
-    }));
-    
-    setInvitations(prev => ({
-      ...prev,
-      [newOrg.id]: [],
-    }));
-  };
-
-  const updateOrganization = (id: string, updates: Partial<Organization>) => {
-    setOrganizations(prev => 
-      prev.map(org => 
-        org.id === id 
-          ? { ...org, ...updates, updatedAt: new Date() }
-          : org
-      )
-    );
-    
-    if (currentOrganization?.id === id) {
-      setCurrentOrganization(prev => prev ? { ...prev, ...updates, updatedAt: new Date() } : null);
+      if (result.success) {
+        setOrganizations(result.data);
+        return result.data;
+      } else {
+        throw new Error(result.message || 'Failed to fetch organizations');
+      }
+    } catch (error) {
+      console.error('Error fetching organizations:', error);
+      throw error;
     }
   };
 
-  const deleteOrganization = (id: string) => {
-    setOrganizations(prev => prev.filter(org => org.id !== id));
-    setMembers(prev => {
-      const newMembers = { ...prev };
-      delete newMembers[id];
-      return newMembers;
-    });
-    setInvitations(prev => {
-      const newInvitations = { ...prev };
-      delete newInvitations[id];
-      return newInvitations;
-    });
-    
-    if (currentOrganization?.id === id) {
-      const remainingOrgs = organizations.filter(org => org.id !== id);
-      setCurrentOrganization(remainingOrgs[0] || null);
+  // Fetch members for a specific organization
+  const fetchMembers = async (orgId: string) => {
+    try {
+      const response = await fetch(`/api/organizations/${orgId}/members`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setMembers(prev => ({
+          ...prev,
+          [orgId]: result.data
+        }));
+        return result.data;
+      } else {
+        throw new Error(result.message || 'Failed to fetch members');
+      }
+    } catch (error) {
+      console.error('Error fetching members:', error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    // Initialize organizations and set default
+    const initializeOrganizations = async () => {
+      setIsLoading(true);
+      try {
+        const orgs = await fetchOrganizations();
+        
+        // Set default organization
+        const savedOrgId = localStorage.getItem('currentOrganizationId');
+        const defaultOrg = savedOrgId 
+          ? orgs.find((org: Organization) => org.id === savedOrgId) || orgs[0]
+          : orgs[0];
+        
+        if (defaultOrg) {
+          setCurrentOrganization(defaultOrg);
+          // Fetch members for the default organization
+          await fetchMembers(defaultOrg.id);
+        }
+      } catch (error) {
+        console.error('Failed to initialize organizations:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeOrganizations();
+  }, []);
+
+  const handleSetCurrentOrganization = async (org: Organization) => {
+    setCurrentOrganization(org);
+    localStorage.setItem('currentOrganizationId', org.id);
+    // Fetch members for the selected organization
+    try {
+      await fetchMembers(org.id);
+    } catch (error) {
+      console.error('Failed to fetch members for organization:', error);
+    }
+  };
+
+  const createOrganization = async (orgData: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const response = await fetch('/api/organizations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orgData),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        const newOrg = result.data;
+        setOrganizations(prev => [...prev, newOrg]);
+        
+        // Initialize empty members and invitations for the new organization
+        setMembers(prev => ({
+          ...prev,
+          [newOrg.id]: [],
+        }));
+        
+        setInvitations(prev => ({
+          ...prev,
+          [newOrg.id]: [],
+        }));
+        
+        return newOrg;
+      } else {
+        throw new Error(result.message || 'Failed to create organization');
+      }
+    } catch (error) {
+      console.error('Error creating organization:', error);
+      throw error;
+    }
+  };
+
+  const updateOrganization = async (id: string, updates: Partial<Organization>) => {
+    try {
+      const response = await fetch(`/api/organizations/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        const updatedOrg = result.data;
+        setOrganizations(prev => 
+          prev.map(org => 
+            org.id === id ? updatedOrg : org
+          )
+        );
+        
+        if (currentOrganization?.id === id) {
+          setCurrentOrganization(updatedOrg);
+        }
+        
+        return updatedOrg;
+      } else {
+        throw new Error(result.message || 'Failed to update organization');
+      }
+    } catch (error) {
+      console.error('Error updating organization:', error);
+      throw error;
+    }
+  };
+
+  const deleteOrganization = async (id: string) => {
+    try {
+      const response = await fetch(`/api/organizations/${id}`, {
+        method: 'DELETE',
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setOrganizations(prev => prev.filter(org => org.id !== id));
+        setMembers(prev => {
+          const newMembers = { ...prev };
+          delete newMembers[id];
+          return newMembers;
+        });
+        setInvitations(prev => {
+          const newInvitations = { ...prev };
+          delete newInvitations[id];
+          return newInvitations;
+        });
+        
+        if (currentOrganization?.id === id) {
+          const remainingOrgs = organizations.filter(org => org.id !== id);
+          setCurrentOrganization(remainingOrgs[0] || null);
+        }
+      } else {
+        throw new Error(result.message || 'Failed to delete organization');
+      }
+    } catch (error) {
+      console.error('Error deleting organization:', error);
+      throw error;
     }
   };
 
@@ -252,91 +207,126 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     return invitations[orgId] || [];
   };
 
-  const inviteMember = (orgId: string, email: string, role: 'admin' | 'member') => {
-    const newInvitation: Invitation = {
-      id: `i${Date.now()}`,
-      email,
-      role,
-      invitedBy: 'David Nunes',
-      invitedAt: new Date(),
-      expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
-      status: 'pending',
-    };
-
-    setInvitations(prev => ({
-      ...prev,
-      [orgId]: [...(prev[orgId] || []), newInvitation],
-    }));
-
-    // Update organization member count
-    setOrganizations(prev =>
-      prev.map(org =>
-        org.id === orgId
-          ? { ...org, memberCount: org.memberCount + 1, updatedAt: new Date() }
-          : org
-      )
-    );
+  const inviteMember = async (orgId: string, email: string, role: 'admin' | 'member') => {
+    try {
+      const response = await fetch(`/api/organizations/${orgId}/members`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, role }),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Refresh members list to include the new member
+        await fetchMembers(orgId);
+        
+        // Update organization member count
+        setOrganizations(prev =>
+          prev.map(org =>
+            org.id === orgId
+              ? { ...org, memberCount: org.memberCount + 1, updatedAt: new Date() }
+              : org
+          )
+        );
+      } else {
+        throw new Error(result.message || 'Failed to invite member');
+      }
+    } catch (error) {
+      console.error('Error inviting member:', error);
+      throw error;
+    }
   };
 
-  const updateMemberRole = (orgId: string, memberId: string, role: 'admin' | 'member') => {
-    setMembers(prev => ({
-      ...prev,
-      [orgId]: prev[orgId]?.map(member =>
-        member.id === memberId ? { ...member, role } : member
-      ) || [],
-    }));
+  const updateMemberRole = async (orgId: string, memberId: string, role: 'admin' | 'member') => {
+    try {
+      // TODO: Implement API call for updating member role
+      // For now, update locally
+      setMembers(prev => ({
+        ...prev,
+        [orgId]: prev[orgId]?.map(member =>
+          member.id === memberId ? { ...member, role } : member
+        ) || [],
+      }));
+    } catch (error) {
+      console.error('Error updating member role:', error);
+      throw error;
+    }
   };
 
-  const removeMember = (orgId: string, memberId: string) => {
-    setMembers(prev => ({
-      ...prev,
-      [orgId]: prev[orgId]?.filter(member => member.id !== memberId) || [],
-    }));
+  const removeMember = async (orgId: string, memberId: string) => {
+    try {
+      // TODO: Implement API call for removing member
+      // For now, update locally
+      setMembers(prev => ({
+        ...prev,
+        [orgId]: prev[orgId]?.filter(member => member.id !== memberId) || [],
+      }));
 
-    // Update organization member count
-    setOrganizations(prev =>
-      prev.map(org =>
-        org.id === orgId
-          ? { ...org, memberCount: Math.max(1, org.memberCount - 1), updatedAt: new Date() }
-          : org
-      )
-    );
+      // Update organization member count
+      setOrganizations(prev =>
+        prev.map(org =>
+          org.id === orgId
+            ? { ...org, memberCount: Math.max(1, org.memberCount - 1), updatedAt: new Date() }
+            : org
+        )
+      );
+    } catch (error) {
+      console.error('Error removing member:', error);
+      throw error;
+    }
   };
 
-  const cancelInvitation = (orgId: string, invitationId: string) => {
-    setInvitations(prev => ({
-      ...prev,
-      [orgId]: prev[orgId]?.map(invitation =>
-        invitation.id === invitationId
-          ? { ...invitation, status: 'cancelled' as const }
-          : invitation
-      ) || [],
-    }));
+  const cancelInvitation = async (orgId: string, invitationId: string) => {
+    try {
+      // TODO: Implement API call for canceling invitation
+      // For now, update locally
+      setInvitations(prev => ({
+        ...prev,
+        [orgId]: prev[orgId]?.map(invitation =>
+          invitation.id === invitationId
+            ? { ...invitation, status: 'cancelled' as const }
+            : invitation
+        ) || [],
+      }));
 
-    // Update organization member count
-    setOrganizations(prev =>
-      prev.map(org =>
-        org.id === orgId
-          ? { ...org, memberCount: Math.max(1, org.memberCount - 1), updatedAt: new Date() }
-          : org
-      )
-    );
+      // Update organization member count
+      setOrganizations(prev =>
+        prev.map(org =>
+          org.id === orgId
+            ? { ...org, memberCount: Math.max(1, org.memberCount - 1), updatedAt: new Date() }
+            : org
+        )
+      );
+    } catch (error) {
+      console.error('Error canceling invitation:', error);
+      throw error;
+    }
   };
 
-  const resendInvitation = (orgId: string, invitationId: string) => {
-    setInvitations(prev => ({
-      ...prev,
-      [orgId]: prev[orgId]?.map(invitation =>
-        invitation.id === invitationId
-          ? {
-              ...invitation,
-              invitedAt: new Date(),
-              expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-              status: 'pending' as const,
-            }
-          : invitation
-      ) || [],
-    }));
+  const resendInvitation = async (orgId: string, invitationId: string) => {
+    try {
+      // TODO: Implement API call for resending invitation
+      // For now, update locally
+      setInvitations(prev => ({
+        ...prev,
+        [orgId]: prev[orgId]?.map(invitation =>
+          invitation.id === invitationId
+            ? {
+                ...invitation,
+                invitedAt: new Date(),
+                expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+                status: 'pending' as const,
+              }
+            : invitation
+        ) || [],
+      }));
+    } catch (error) {
+      console.error('Error resending invitation:', error);
+      throw error;
+    }
   };
 
   const value: OrganizationContextType = {

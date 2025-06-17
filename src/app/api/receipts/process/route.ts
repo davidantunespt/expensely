@@ -111,7 +111,6 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           message: error.message,
-          extractedAt: new Date().toISOString(),
         },
         { status: 401 }
       );

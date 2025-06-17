@@ -476,6 +476,7 @@ export class OrganizationService {
             firstName: true,
             lastName: true,
             displayName: true,
+            email: true,
           },
         },
       },
