@@ -229,6 +229,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log("SAVINF IN ORGANIZATION ID", user.organizationId);
     const createdReceipt = await ReceiptService.createReceipt(
       user.organizationId,
       user.id,

@@ -25,6 +25,18 @@ import { ReceiptDetailModal } from "@/components/Layout/ReceiptDetailModal";
 import { ExpensesHeader } from "@/components/Expenses/ExpensesHeader";
 import { ToastContainer, useToast } from "@/components/UI/Toast";
 import { DeleteReceiptModal } from "@/components/UI/DeleteReceiptModal";
+import { Input } from "@/components/UI/input";
+import {
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectWithLabel,
+} from "@/components/UI/select";
+import { DatePicker } from "@/components/UI/DatePicker";
+import { CurrencyInput } from "@/components/UI/CurrencyInput";
+import { Button } from "@/components/UI/Button";
+import { cn } from "@/lib/utils";
 
 // API Response Types
 interface ApiResponse {
@@ -274,167 +286,149 @@ export default function ExpensesPage() {
           <div className="flex items-center space-x-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted" />
-              <input
+              <Input
                 type="text"
                 placeholder="Search by vendor, description, or document ID..."
                 value={filters.search}
                 onChange={(e) =>
                   setFilters({ ...filters, search: e.target.value })
                 }
-                className="w-full pl-10 pr-4 py-3 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 text-text-primary bg-bg-primary"
+                className="w-full pl-10 pr-4 h-12 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 text-text-primary bg-bg-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent"
               />
             </div>
-            <button
+            <Button
+              variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-200 ${
-                showFilters
-                  ? "bg-accent text-text-inverse"
-                  : "border border-accent text-accent hover:bg-accent hover:text-text-inverse"
-              }`}
+              icon={<Filter className="w-5 h-5" />}
+              className={cn(
+                "px-6 py-3 h-12 rounded-xl transition-all duration-200 border-accent text-accent hover:bg-accent hover:text-text-inverse",
+                showFilters && "bg-accent text-text-inverse border-accent"
+              )}
             >
-              <Filter className="w-5 h-5" />
-              <span>Filters</span>
-            </button>
+              Filters
+            </Button>
           </div>
 
           {/* Advanced Filters */}
           {showFilters && (
             <div className="border-t border-gray-200 pt-6 mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={filters.category}
-                    onChange={(e) =>
-                      setFilters({ ...filters, category: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19e2c0] focus:border-[#19e2c0] text-text-primary bg-bg-primary"
-                  >
+                <SelectWithLabel
+                  label="Category"
+                  value={filters.category}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, category: value })
+                  }
+                >
+                  <SelectTrigger className="w-full h-12 px-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary bg-bg-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {categories.map((category) => (
-                      <option key={category.value} value={category.value}>
+                      <SelectItem key={category.value} value={category.value}>
                         {category.label}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                </div>
+                  </SelectContent>
+                </SelectWithLabel>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Payment Method
-                  </label>
-                  <select
-                    value={filters.paymentMethod}
-                    onChange={(e) =>
-                      setFilters({ ...filters, paymentMethod: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19e2c0] focus:border-[#19e2c0] text-text-primary bg-bg-primary"
-                  >
+                <SelectWithLabel
+                  label="Payment Method"
+                  value={filters.paymentMethod}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, paymentMethod: value })
+                  }
+                >
+                  <SelectTrigger className="w-full h-12 px-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary bg-bg-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent">
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {paymentMethods.map((method) => (
-                      <option key={method.value} value={method.value}>
+                      <SelectItem key={method.value} value={method.value}>
                         {method.label}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                </div>
+                  </SelectContent>
+                </SelectWithLabel>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Tax Deductible
-                  </label>
-                  <select
-                    value={
-                      filters.isDeductible === null
-                        ? "All"
-                        : filters.isDeductible.toString()
-                    }
-                    onChange={(e) =>
-                      setFilters({
-                        ...filters,
-                        isDeductible:
-                          e.target.value === "All"
-                            ? null
-                            : e.target.value === "true",
-                      })
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19e2c0] focus:border-[#19e2c0] text-text-primary bg-bg-primary"
-                  >
-                    <option value="All">All</option>
-                    <option value="true">Deductible</option>
-                    <option value="false">Non-deductible</option>
-                  </select>
-                </div>
+                <SelectWithLabel
+                  label="Tax Deductible"
+                  value={
+                    filters.isDeductible === null
+                      ? "All"
+                      : filters.isDeductible.toString()
+                  }
+                  onValueChange={(value) =>
+                    setFilters({
+                      ...filters,
+                      isDeductible:
+                        value === "All"
+                          ? null
+                          : value === "true",
+                    })
+                  }
+                >
+                  <SelectTrigger className="w-full h-12 px-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary bg-bg-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent">
+                    <SelectValue placeholder="Select tax status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All</SelectItem>
+                    <SelectItem value="true">Deductible</SelectItem>
+                    <SelectItem value="false">Non-deductible</SelectItem>
+                  </SelectContent>
+                </SelectWithLabel>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Date From
-                  </label>
-                  <input
-                    type="date"
-                    value={filters.dateFrom}
-                    onChange={(e) =>
-                      setFilters({ ...filters, dateFrom: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19e2c0] focus:border-[#19e2c0] text-text-primary bg-bg-primary"
-                  />
-                </div>
+                <DatePicker
+                  label="Date From"
+                  value={filters.dateFrom ? new Date(filters.dateFrom) : undefined}
+                  onChange={(date) =>
+                    setFilters({ 
+                      ...filters, 
+                      dateFrom: date ? date.toISOString().split('T')[0] : "" 
+                    })
+                  }
+                  placeholder="Select start date"
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Date To
-                  </label>
-                  <input
-                    type="date"
-                    value={filters.dateTo}
-                    onChange={(e) =>
-                      setFilters({ ...filters, dateTo: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19e2c0] focus:border-[#19e2c0] text-text-primary bg-bg-primary"
-                  />
-                </div>
+                <DatePicker
+                  label="Date To"
+                  value={filters.dateTo ? new Date(filters.dateTo) : undefined}
+                  onChange={(date) =>
+                    setFilters({ 
+                      ...filters, 
+                      dateTo: date ? date.toISOString().split('T')[0] : "" 
+                    })
+                  }
+                  placeholder="Select end date"
+                />
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Min Amount (€)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={filters.minAmount || ""}
-                    onChange={(e) =>
-                      setFilters({
-                        ...filters,
-                        minAmount: e.target.value
-                          ? parseFloat(e.target.value)
-                          : null,
-                      })
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19e2c0] focus:border-[#19e2c0] text-text-primary bg-bg-primary"
-                  />
-                </div>
+                <CurrencyInput
+                  label="Min Amount"
+                  value={filters.minAmount}
+                  onChange={(value) =>
+                    setFilters({
+                      ...filters,
+                      minAmount: value,
+                    })
+                  }
+                  placeholder="0.00"
+                  min={0}
+                />
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Max Amount (€)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={filters.maxAmount || ""}
-                    onChange={(e) =>
-                      setFilters({
-                        ...filters,
-                        maxAmount: e.target.value
-                          ? parseFloat(e.target.value)
-                          : null,
-                      })
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19e2c0] focus:border-[#19e2c0] text-text-primary bg-bg-primary"
-                  />
-                </div>
+                <CurrencyInput
+                  label="Max Amount"
+                  value={filters.maxAmount}
+                  onChange={(value) =>
+                    setFilters({
+                      ...filters,
+                      maxAmount: value,
+                    })
+                  }
+                  placeholder="0.00"
+                  min={0}
+                />
               </div>
 
               <div className="flex justify-end">
@@ -669,7 +663,7 @@ export default function ExpensesPage() {
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="p-2 text-gray-400 hover:text-[#19e2c0] hover:bg-[#e6fcf7] rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 text-gray-400 hover:text-accent hover:bg-bg-accent rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
@@ -684,7 +678,7 @@ export default function ExpensesPage() {
                           onClick={() => setCurrentPage(page)}
                           className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                             currentPage === page
-                              ? "bg-[#19e2c0] text-white"
+                              ? "bg-accent text-text-inverse"
                               : "text-gray-700 hover:bg-gray-100"
                           }`}
                         >
@@ -701,7 +695,7 @@ export default function ExpensesPage() {
                       )
                     }
                     disabled={currentPage === pagination.totalPages}
-                    className="p-2 text-gray-400 hover:text-[#19e2c0] hover:bg-[#e6fcf7] rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 text-gray-400 hover:text-accent hover:bg-bg-accent rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>

@@ -24,13 +24,13 @@ interface MemberWithProfile {
 // GET /api/organizations/[id]/members - Get organization members
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getUserFromRequest(request);
-
+    const { id } = await params;
     const members = await OrganizationService.getOrganizationMembers(
-      params.id,
+      id,
       user.id
     );
 
@@ -72,11 +72,12 @@ export async function GET(
 // POST /api/organizations/[id]/members - Add member to organization
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getUserFromRequest(request);
-    const organizationId = params.id;
+    const { id } = await params;
+    const organizationId = id;
 
     await verifyAccess(user.id, organizationId);
 

@@ -5,6 +5,8 @@ import { UploadHeader } from '@/components/Upload/UploadHeader';
 import { FileUploadArea, FileUploadAreaRef } from '@/components/Upload/FileUploadArea';
 import { ReceiptDataDisplay } from '@/components/Upload/ReceiptDataDisplay';
 import { ReceiptData } from '@/lib/validations/receipt';
+import { useOrganization } from '@/contexts/OrganizationContext';
+import { ToastContainer, useToast } from '@/components/UI/Toast';
 
 interface ProcessedFile {
   fileId: string;
@@ -25,6 +27,8 @@ export default function UploadReceipt() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const fileUploadAreaRef = useRef<FileUploadAreaRef>(null);
+  const { currentOrganization } = useOrganization();
+  const { toasts, showError, removeToast } = useToast();
 
   const handleFileProcessed = (fileId: string, extractedData: ReceiptData) => {
     // Get the file from the FileUploadArea ref
@@ -64,12 +68,20 @@ export default function UploadReceipt() {
   };
 
   const handleSaveReceipts = async () => {
+    // Check if organization is selected
+    if (!currentOrganization?.id) {
+      showError(
+        "Organization Required",
+        "Please select an organization before saving receipts."
+      );
+      return;
+    }
+
     setIsSaving(true);
     setSaveSuccess(false);
     setSaveError(null);
     
     try {
-      console.log("processedFiles", processedFiles);
       // Get only reviewed files
       const reviewedFiles = processedFiles.filter(file => file.isReviewed);
       const savedFileIds: string[] = [];
@@ -85,6 +97,9 @@ export default function UploadReceipt() {
           const response = await fetch('/api/receipts', {
             method: 'POST',
             body: formData,
+            headers: {
+              "x-organization-id": currentOrganization?.id || "",
+            },
           });
 
           const result = await response.json();
@@ -216,6 +231,9 @@ export default function UploadReceipt() {
           </div>
         </>
       )}
+      
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
   );
 } 

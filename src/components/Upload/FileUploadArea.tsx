@@ -401,7 +401,6 @@ Network error: ${
           <h3 className="text-lg font-semibold text-text-primary">
             Upload Receipt Files
           </h3>
-
           <div className="mb-6">
             <p className="text-sm text-text-muted">
               Supported formats:{" "}
@@ -442,7 +441,7 @@ Network error: ${
                 or click to browse files from your computer
               </p>
 
-              <Button variant="primary" size="md">
+              <Button variant="primary" size="lg">
                 Choose Files
               </Button>
             </div>
