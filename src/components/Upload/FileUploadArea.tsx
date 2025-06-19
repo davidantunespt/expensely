@@ -28,11 +28,12 @@ interface UploadedFile {
   size: number;
   type: string;
   file: File;
-  status: "uploaded" | "processing" | "processed" | "error" | "rejected";
+  status: "uploaded" | "processing" | "processed" | "error" | "rejected" | "saved";
   progress?: number;
   preview?: string;
   showSuccessButton?: boolean;
   successButtonFading?: boolean;
+  isRemoving?: boolean;
 }
 
 interface FileUploadAreaProps {
@@ -283,16 +284,41 @@ export const FileUploadArea = forwardRef<
     );
 
     const removeFile = (fileId: string) => {
-      setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
+      // First, mark the file as removing to trigger fade-out animation
+      setUploadedFiles((prev) =>
+        prev.map((file) =>
+          file.id === fileId ? { ...file, isRemoving: true } : file
+        )
+      );
+
+      // After fade-out animation completes, actually remove the file
+      setTimeout(() => {
+        setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
+      }, 300); // 300ms matches the CSS transition duration
     };
 
     const updateFileStatus = (
       fileId: string,
       status: UploadedFile["status"]
     ) => {
-      setUploadedFiles((prev) =>
-        prev.map((file) => (file.id === fileId ? { ...file, status } : file))
-      );
+      // If status is being set to rejected, start the fade-out animation
+      if (status === 'rejected') {
+        setUploadedFiles((prev) =>
+          prev.map((file) => 
+            file.id === fileId ? { ...file, status, isRemoving: true } : file
+          )
+        );
+        
+        // After fade-out animation, actually remove the file
+        setTimeout(() => {
+          setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
+        }, 300);
+      } else {
+        // For all other statuses (including "saved"), just update the status
+        setUploadedFiles((prev) =>
+          prev.map((file) => (file.id === fileId ? { ...file, status } : file))
+        );
+      }
       onFileStatusUpdate?.(fileId, status);
     };
 
@@ -424,12 +450,22 @@ Network error: ${
 
           {/* Individual File Cards */}
           {uploadedFiles.length > 0 && (
-            <div className="space-y-4 mt-6">
+            <div 
+              className={`space-y-4 mt-6 transition-all duration-300 ${
+                uploadedFiles.every(file => file.isRemoving) 
+                  ? "opacity-0 transform translate-y-4" 
+                  : "opacity-100 transform translate-y-0"
+              }`}
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {uploadedFiles.map((file) => (
                   <div
                     key={file.id}
-                    className="bg-bg-secondary border border-border-primary rounded-2xl overflow-hidden h-fit"
+                    className={`bg-bg-secondary border border-border-primary rounded-2xl overflow-hidden h-fit transition-all duration-300 transform ${
+                      file.isRemoving 
+                        ? "opacity-0 scale-95 translate-y-2" 
+                        : "opacity-100 scale-100 translate-y-0"
+                    }`}
                   >
                     <div className="p-5">
                       <div className="flex items-start justify-between">
@@ -506,6 +542,12 @@ Network error: ${
                                     Error
                                   </span>
                                 )}
+                                {file.status === "saved" && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                    Saved
+                                  </span>
+                                )}
                               </div>
                             </div>
 
@@ -523,27 +565,34 @@ Network error: ${
                           </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-col space-y-1 ml-2">
-                          <button
-                            onClick={() => removeFile(file.id)}
-                            className="p-1.5 text-text-muted hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
-                            title="Remove file"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
+                        {/* Action Buttons - Hide for saved files */}
+                        {file.status !== "saved" && (
+                          <div className="flex flex-col space-y-1 ml-2">
+                            <button
+                              onClick={() => removeFile(file.id)}
+                              disabled={file.isRemoving}
+                              className={`p-1.5 rounded transition-all duration-200 cursor-pointer ${
+                                file.isRemoving
+                                  ? "text-text-muted opacity-50 cursor-not-allowed"
+                                  : "text-text-muted hover:text-red-600 hover:bg-red-50 hover:scale-110"
+                              }`}
+                              title="Remove file"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
 
-                          <button
-                            className="p-1.5 text-text-muted hover:text-accent hover:bg-bg-accent rounded transition-colors cursor-pointer"
-                            title="Scan receipt"
-                            onClick={() => scanReceipt(file)}
-                          >
-                            <QrCode className="w-3 h-3" />
-                          </button>
-                        </div>
+                            <button
+                              className="p-1.5 text-text-muted hover:text-accent hover:bg-bg-accent rounded transition-colors cursor-pointer"
+                              title="Scan receipt"
+                              onClick={() => scanReceipt(file)}
+                            >
+                              <QrCode className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Process Button */}
+                      {/* Process Button - Hide for saved files */}
                       {(file.status === "uploaded" ||
                         file.status === "processing" ||
                         file.status === "processed" ||
@@ -597,6 +646,15 @@ Network error: ${
                                 : "Retry"}
                             </Button>
                           )}
+                        </div>
+                      )}
+                      
+                      {/* Saved files show a different message */}
+                      {file.status === "saved" && (
+                        <div className="border-t border-border-primary pt-3 mt-3">
+                          <div className="text-center text-sm text-text-secondary">
+                            This receipt has been saved successfully
+                          </div>
                         </div>
                       )}
                     </div>

@@ -24,37 +24,37 @@ const navigationItems = [
     name: 'Dashboard',
     href: '/',
     icon: Home,
-    description: 'Overview & analytics'
+    // description: 'Overview & analytics'
   },
   {
     name: 'Upload Receipt',
     href: '/upload',
     icon: Camera,
-    description: 'Add new expenses'
+    // description: 'Add new expenses'
   },
   {
     name: 'Expenses',
     href: '/expenses',
     icon: FolderOpen,
-    description: 'Manage transactions'
+    // description: 'Manage transactions'
   },
   {
     name: 'Invoicing',
     href: '/invoicing',
     icon: Receipt,
-    description: 'Billable tracking'
+    // description: 'Billable tracking'
   },
   {
     name: 'Tax Reports',
     href: '/reports',
     icon: BarChart3,
-    description: 'Tax & analytics'
+    // description: 'Tax & analytics'
   },
   {
     name: 'Settings',
     href: '/settings',
     icon: Settings,
-    description: 'Profile & preferences'
+    // description: 'Profile & preferences'
   }
 ];
 
@@ -63,19 +63,19 @@ const bottomNavItems = [
     name: 'Notifications',
     href: '/notifications',
     icon: Bell,
-    description: 'Alerts & reminders'
+    // description: 'Alerts & reminders'
   },
   {
     name: 'Subscription',
     href: '/subscription',
     icon: Users,
-    description: 'Plan management'
+    // description: 'Plan management'
   },
   {
     name: 'Help',
     href: '/help',
     icon: HelpCircle,
-    description: 'Support center'
+    // description: 'Support center'
   }
 ];
 

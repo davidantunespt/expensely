@@ -56,10 +56,10 @@ export default function UploadReceipt() {
   };
 
   const handleDiscardProcessedFile = (fileId: string) => {
-    // Remove from processed files
+    // Remove from processed files (the ReceiptDataDisplay handles its own fade-out)
     setProcessedFiles(prev => prev.filter(file => file.fileId !== fileId));
     
-    // Update original file status to rejected
+    // Update original file status to rejected (this will trigger the file card fade-out)
     fileUploadAreaRef.current?.updateFileStatus(fileId, 'rejected');
   };
 
@@ -72,6 +72,7 @@ export default function UploadReceipt() {
       console.log("processedFiles", processedFiles);
       // Get only reviewed files
       const reviewedFiles = processedFiles.filter(file => file.isReviewed);
+      const savedFileIds: string[] = [];
       
       // Process each file one at a time
       for (const file of reviewedFiles) {
@@ -91,8 +92,16 @@ export default function UploadReceipt() {
           if (!response.ok || !result.success) {
             throw new Error(result.error || result.message || 'Failed to save receipt.');
           }
+          
+          // Track successfully saved file IDs
+          savedFileIds.push(file.fileId);
         }
       }
+
+      // Update file status to "saved" for successfully saved files
+      savedFileIds.forEach(fileId => {
+        fileUploadAreaRef.current?.updateFileStatus(fileId, 'saved');
+      });
 
       // If all receipts were saved successfully
       setSaveSuccess(true);

@@ -171,7 +171,15 @@ export function ReceiptDataDisplay({
       {/* Main Content */}
       <div className={`space-y-4 transition-all duration-300 ${viewingFileId ? 'ml-[22vw]' : ''}`}>
         {processedFiles.map((file) => (
-          <Box key={file.fileId} style={{ backgroundColor: 'white' }}>
+          <div
+            key={file.fileId}
+            className={`transition-all duration-1000 transform ${
+              file.isDiscarding 
+                ? "opacity-0 scale-95 translate-y-4" 
+                : "opacity-100 scale-100 translate-y-0"
+            }`}
+          >
+            <Box style={{ backgroundColor: 'white' }}>
             <div className="flex items-center justify-between">
               <div className="flex flex-col flex-1 min-w-0">
                 <div className="flex items-center space-x-2">
@@ -642,6 +650,7 @@ export function ReceiptDataDisplay({
               </div>
             </div>
           </Box>
+          </div>
         ))}
       </div>
     </div>
