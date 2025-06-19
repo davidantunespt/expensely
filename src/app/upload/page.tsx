@@ -106,12 +106,12 @@ export default function UploadReceipt() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-8 py-8">
       {/* Header Section */}
       <UploadHeader />
 
       {/* File Upload Area */}
-      <div className="mb-4">
+      <div className="mb-8">
         <FileUploadArea 
           onFileProcessed={handleFileProcessed} 
           ref={fileUploadAreaRef}
@@ -123,38 +123,38 @@ export default function UploadReceipt() {
       {/* Three-Step Flow Guide - Only shows when no files are processed */}
       {processedFiles.length === 0 && (
         <div className="mb-8">
-          <div className="bg-bg-primary rounded-2xl border border-border-primary p-6">
-            <h3 className="text-lg font-semibold text-text-primary mb-4 text-center">How it works</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-bg-primary rounded-2xl border border-border-primary p-8">
+            <h3 className="text-xl font-semibold text-text-primary mb-8 text-center">How it works</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Step 1 */}
               <div className="text-center">
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl font-bold text-primary">1</span>
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-text-inverse">1</span>
                 </div>
-                <h4 className="font-semibold text-text-primary mb-2">Upload & Process</h4>
-                <p className="text-sm text-text-secondary">
+                <h4 className="font-semibold text-text-primary mb-3 text-lg">Upload & Process</h4>
+                <p className="text-sm text-text-secondary leading-relaxed">
                   Upload your receipt files and let our AI extract the data automatically
                 </p>
               </div>
 
               {/* Step 2 */}
               <div className="text-center">
-                <div className="w-12 h-12 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl font-bold text-accent">2</span>
+                <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-text-inverse">2</span>
                 </div>
-                <h4 className="font-semibold text-text-primary mb-2">Review & Edit</h4>
-                <p className="text-sm text-text-secondary">
+                <h4 className="font-semibold text-text-primary mb-3 text-lg">Review & Edit</h4>
+                <p className="text-sm text-text-secondary leading-relaxed">
                   Review the extracted data and make any necessary corrections
                 </p>
               </div>
 
               {/* Step 3 */}
               <div className="text-center">
-                <div className="w-12 h-12 bg-success-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl font-bold text-success-green">3</span>
+                <div className="w-16 h-16 bg-highlight rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-text-primary">3</span>
                 </div>
-                <h4 className="font-semibold text-text-primary mb-2">Save!</h4>
-                <p className="text-sm text-text-secondary">
+                <h4 className="font-semibold text-text-primary mb-3 text-lg">Save!</h4>
+                <p className="text-sm text-text-secondary leading-relaxed">
                   Mark receipts as reviewed and save them to your expense tracker
                 </p>
               </div>

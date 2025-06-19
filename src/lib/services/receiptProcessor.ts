@@ -66,7 +66,7 @@ export async function scanReceiptQRCode(
     const formData = new FormData();
     const buffer = await file.arrayBuffer();
     const blob = new Blob([buffer], { type: file.type });
-    formData.append("file", file, file.name);
+    formData.append("file", blob, file.name);
 
     console.log("formData", btoa("admin:pyOsLs8fFGv3P2p"), formData);
     const response = await fetch("https://qrcode.usados.top/scan", {

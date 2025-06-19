@@ -18,7 +18,6 @@ import {
   Brain,
   QrCode,
 } from "lucide-react";
-import { Box } from "@/components/UI/Box";
 import { Button } from "@/components/UI/Button";
 import { ReceiptData } from "@/lib/validations/receipt";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -121,77 +120,7 @@ export const FileUploadArea = forwardRef<
       });
     };
 
-    const handleFiles = useCallback(
-      async (files: File[]) => {
-        for (const file of files) {
-          // Validate file size
-          if (file.size > maxSize) {
-            console.error(
-              `File ${file.name} is too large. Maximum size is ${maxSize} bytes.`
-            );
-            continue;
-          }
-
-          // Validate file type
-          const fileType = file.type.toLowerCase();
-          const acceptedTypes = accept.split(",").map((type) => type.trim());
-          if (!acceptedTypes.some((type) => fileType === type)) {
-            console.error(
-              `File ${file.name} has an invalid type. Accepted types are: ${accept}`
-            );
-            continue;
-          }
-
-          const preview = await createFilePreview(file);
-
-          const newFile: UploadedFile = {
-            id: Date.now() + Math.random().toString(),
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            file: file,
-            status: "uploaded",
-            preview,
-          };
-
-          setUploadedFiles((prev) => [...prev, newFile]);
-        }
-      },
-      [accept, maxSize]
-    );
-
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragOver(true);
-    }, []);
-
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragOver(false);
-    }, []);
-
-    const handleDrop = useCallback(
-      (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragOver(false);
-
-        const files = Array.from(e.dataTransfer.files);
-        handleFiles(files);
-      },
-      [handleFiles]
-    );
-
-    const handleFileInput = useCallback(
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-          const files = Array.from(e.target.files);
-          handleFiles(files);
-        }
-      },
-      [handleFiles]
-    );
-
-    const processFile = async (fileId: string) => {
+    const processFile = useCallback(async (fileId: string, fileObject?: UploadedFile) => {
       setUploadedFiles((prev) =>
         prev.map((file) =>
           file.id === fileId
@@ -201,8 +130,11 @@ export const FileUploadArea = forwardRef<
       );
 
       try {
-        // Get the file from uploaded files
-        const fileToProcess = uploadedFiles.find((file) => file.id === fileId);
+        // Get the file from uploaded files or use the provided file object
+        let fileToProcess = fileObject;
+        if (!fileToProcess) {
+          fileToProcess = uploadedFiles.find((file) => file.id === fileId);
+        }
         if (!fileToProcess) {
           throw new Error("File not found");
         }
@@ -266,16 +198,89 @@ export const FileUploadArea = forwardRef<
         );
         // You might want to show an error toast/notification here
       }
-    };
+    }, [uploadedFiles, currentOrganization?.id, onFileProcessed]);
 
-    const processAllFiles = () => {
-      const pendingFiles = uploadedFiles.filter(
-        (file) => file.status === "uploaded"
-      );
-      pendingFiles.forEach((file) => {
-        processFile(file.id);
-      });
-    };
+    const handleFiles = useCallback(
+      async (files: File[]) => {
+        const newFilesToProcess: Array<{ id: string; file: UploadedFile }> = [];
+        
+        for (const file of files) {
+          // Validate file size
+          if (file.size > maxSize) {
+            console.error(
+              `File ${file.name} is too large. Maximum size is ${maxSize} bytes.`
+            );
+            continue;
+          }
+
+          // Validate file type
+          const fileType = file.type.toLowerCase();
+          const acceptedTypes = accept.split(",").map((type) => type.trim());
+          if (!acceptedTypes.some((type) => fileType === type)) {
+            console.error(
+              `File ${file.name} has an invalid type. Accepted types are: ${accept}`
+            );
+            continue;
+          }
+
+          const preview = await createFilePreview(file);
+          const fileId = Date.now() + Math.random().toString();
+
+          const newFile: UploadedFile = {
+            id: fileId,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            file: file,
+            status: "uploaded",
+            preview,
+          };
+
+          setUploadedFiles((prev) => [...prev, newFile]);
+          newFilesToProcess.push({ id: fileId, file: newFile });
+        }
+        
+        // Automatically process all newly uploaded files
+        // Pass the file objects directly to avoid state lookup issues
+        setTimeout(() => {
+          newFilesToProcess.forEach(({ id, file }) => {
+            processFile(id, file);
+          });
+        }, 100);
+      },
+      [accept, maxSize, processFile]
+    );
+
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(true);
+    }, []);
+
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+    }, []);
+
+    const handleDrop = useCallback(
+      (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+
+        const files = Array.from(e.dataTransfer.files);
+        handleFiles(files);
+      },
+      [handleFiles]
+    );
+
+    const handleFileInput = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+          const files = Array.from(e.target.files);
+          handleFiles(files);
+        }
+      },
+      [handleFiles]
+    );
 
     const removeFile = (fileId: string) => {
       setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
@@ -366,23 +371,31 @@ Network error: ${
 
     return (
       <>
-        <Box style={{ backgroundColor: "white" }}>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-bg-primary rounded-2xl border border-border-primary p-6">
+          <h3 className="text-lg font-semibold text-text-primary">
             Upload Receipt Files
           </h3>
 
+          <div className="mb-6">
+            <p className="text-sm text-text-muted">
+              Supported formats:{" "}
+              <span className="font-medium">JPG, PNG, PDF</span> • Max file
+              size: <span className="font-medium">10MB</span>
+            </p>
+          </div>
           {/* Drag & Drop Area */}
           <div
-            className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 mb-6 ${
+            className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-200 ${
               isDragOver
-                ? "border-gray-400 bg-gray-50"
-                : "border-gray-300 hover:border-gray-400"
+                ? "border-border-accent bg-bg-accent"
+                : "border-border-secondary hover:border-border-accent bg-bg-tertiary"
             }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
             <input
+              id="file-input"
               type="file"
               multiple
               accept={accept}
@@ -391,15 +404,15 @@ Network error: ${
             />
 
             <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center mb-4">
-                <Upload className="w-6 h-6 text-gray-600" />
+              <div className="w-16 h-16 bg-bg-muted rounded-2xl flex items-center justify-center mb-6">
+                <Upload className="w-8 h-8 text-text-muted" />
               </div>
 
-              <h4 className="text-lg font-medium text-gray-900 mb-2">
+              <h4 className="text-xl font-medium text-text-primary mb-3">
                 {isDragOver ? "Drop files here" : "Drag & drop files here"}
               </h4>
 
-              <p className="text-base text-gray-600 mb-4">
+              <p className="text-base text-text-secondary mb-6">
                 or click to browse files from your computer
               </p>
 
@@ -411,19 +424,19 @@ Network error: ${
 
           {/* Individual File Cards */}
           {uploadedFiles.length > 0 && (
-            <div className="space-y-4">
+            <div className="space-y-4 mt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {uploadedFiles.map((file) => (
                   <div
                     key={file.id}
-                    className="bg-gray-50 rounded-lg overflow-hidden h-fit"
+                    className="bg-bg-secondary border border-border-primary rounded-2xl overflow-hidden h-fit"
                   >
                     <div className="p-5">
                       <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-3 flex-1 min-w-0">
                           {/* File Preview */}
                           <button
-                            className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden focus:outline-none"
+                            className="w-12 h-12 bg-bg-muted rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden focus:outline-none"
                             type="button"
                             title="Preview file"
                             onClick={() => {
@@ -449,7 +462,7 @@ Network error: ${
                                 {file.type === "application/pdf" ? (
                                   <FileText className="w-6 h-6 text-red-500" />
                                 ) : (
-                                  <File className="w-6 h-6 text-gray-600" />
+                                  <File className="w-6 h-6 text-text-muted" />
                                 )}
                               </div>
                             )}
@@ -458,13 +471,13 @@ Network error: ${
                           {/* File Info */}
                           <div className="flex-1 min-w-0">
                             <h5
-                              className="font-medium text-gray-900 truncate"
+                              className="font-medium text-text-primary truncate"
                               title={file.name}
                             >
                               {file.name}
                             </h5>
                             <div className="flex items-center gap-2 mt-1">
-                              <p className="text-sm text-gray-600">
+                              <p className="text-sm text-text-secondary">
                                 {formatFileSize(file.size)}
                               </p>
 
@@ -497,16 +510,16 @@ Network error: ${
                             </div>
 
                             {/* Progress bar for processing - keep this on its own line when needed */}
-                            {file.status === "processing" && (
+                            {/* {file.status === "processing" && (
                               <div className="mt-1">
-                                <div className="w-full bg-gray-300 rounded-full h-1">
+                                <div className="w-full bg-bg-muted rounded-full h-1">
                                   <div
-                                    className="bg-yellow-600 h-1 rounded-full transition-all duration-300"
+                                    className="bg-accent h-1 rounded-full transition-all duration-300"
                                     style={{ width: `${file.progress || 20}%` }}
                                   ></div>
                                 </div>
                               </div>
-                            )}
+                            )} */}
                           </div>
                         </div>
 
@@ -514,14 +527,14 @@ Network error: ${
                         <div className="flex flex-col space-y-1 ml-2">
                           <button
                             onClick={() => removeFile(file.id)}
-                            className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
+                            className="p-1.5 text-text-muted hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
                             title="Remove file"
                           >
                             <X className="w-3 h-3" />
                           </button>
 
                           <button
-                            className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                            className="p-1.5 text-text-muted hover:text-accent hover:bg-bg-accent rounded transition-colors cursor-pointer"
                             title="Scan receipt"
                             onClick={() => scanReceipt(file)}
                           >
@@ -535,7 +548,7 @@ Network error: ${
                         file.status === "processing" ||
                         file.status === "processed" ||
                         file.status === "error") && (
-                        <div className="border-t border-gray-200 pt-3 mt-3">
+                        <div className="border-t border-border-primary pt-3 mt-3">
                           {file.status === "uploaded" && (
                             <Button
                               variant="primary"
@@ -590,21 +603,9 @@ Network error: ${
                   </div>
                 ))}
               </div>
-              <div className="w-full">
-                {uploadedFiles.some((file) => file.status === "uploaded") && (
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    icon={<Brain />}
-                    onClick={processAllFiles}
-                  >
-                    Process All
-                  </Button>
-                )}
-              </div>
             </div>
           )}
-        </Box>
+        </div>
 
         {/* Image Modal */}
         {viewingImage && (
