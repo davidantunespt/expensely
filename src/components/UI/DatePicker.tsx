@@ -96,7 +96,7 @@ export function DatePicker({
         label={label}
         required={required}
         error={error}
-        className="pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary bg-bg-primary transition-all duration-200"
+        className="pr-10"
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         disabled={disabled}
@@ -106,13 +106,13 @@ export function DatePicker({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-1/2 right-2 h-6 w-6 -translate-y-1/2 hover:bg-bg-muted"
+            className="absolute top-1/2 right-2 h-6 w-6 -translate-y-1/2 hover:bg-gray-100"
             disabled={disabled}
             style={{ 
               top: label ? 'calc(50% + 14px)' : '50%' 
             }}
           >
-            <CalendarIcon className="h-3.5 w-3.5 text-text-muted" />
+            <CalendarIcon className="h-3.5 w-3.5 text-gray-600" />
             <span className="sr-only">Select date</span>
           </Button>
         </PopoverTrigger>
