@@ -26,7 +26,7 @@ export function Button({
   const variantClasses = {
     primary: 'bg-primary text-text-inverse hover:bg-primary-800 disabled:bg-primary-400',
     secondary: 'border border-border-secondary bg-bg-primary text-text-primary hover:bg-bg-muted disabled:bg-secondary-200',
-    success: 'bg-success-green text-text-primary hover:bg-success-green-700 disabled:bg-success-green-400',
+    success: 'bg-success-green text-text-inverse hover:bg-success-green-700 disabled:bg-success-green-400',
     danger: 'bg-red-600 text-text-inverse hover:bg-red-700 disabled:bg-red-400'
   };
 

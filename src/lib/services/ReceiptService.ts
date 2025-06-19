@@ -157,14 +157,28 @@ export class ReceiptService {
     userId: string
   ): Promise<boolean> {
     try {
-      const result = await prisma.receipt.deleteMany({
+      const receipt = await prisma.receipt.findUnique({
+        where: { id: receiptId, organizationId },
+        select: { fileStoragePath: true, id: true },
+      });
+
+      if (!receipt) {
+        return false;
+      }
+
+      await prisma.receipt.delete({
         where: {
           id: receiptId,
           organizationId: organizationId,
           addedById: userId,
         },
       });
-      return result.count > 0;
+
+      if (receipt.fileStoragePath) {
+        await fileService.deleteReceiptFile(organizationId, receipt.id);
+      }
+
+      return true;
     } catch (error) {
       console.error("Error deleting receipt:", error);
       return false;

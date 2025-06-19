@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Search,
   Filter,
@@ -97,13 +97,15 @@ export default function ExpensesPage() {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
+  const [deleteReceipt, setDeleteReceipt] = useState<Receipt | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // API Functions
-  const fetchReceipts = async () => {
+  const fetchReceipts = useCallback(async () => {
     if (!currentOrganization?.id) return;
 
     setLoading(true);
@@ -152,12 +154,60 @@ export default function ExpensesPage() {
     } finally {
       setLoading(false);
     }
+  }, [
+    currentOrganization?.id,
+    currentPage,
+    itemsPerPage,
+    sortField,
+    sortDirection,
+    filters.search,
+    filters.category,
+    filters.paymentMethod,
+    filters.isDeductible,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.minAmount,
+    filters.maxAmount,
+  ]);
+
+  // Delete receipt function
+  const handleDeleteReceipt = async (receiptId: string) => {
+    if (!currentOrganization?.id) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/receipts/${receiptId}`, {
+        method: "DELETE",
+        headers: {
+          "x-organization-id": currentOrganization.id,
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showSuccess(
+          "Receipt deleted",
+          "The receipt has been successfully deleted"
+        );
+        // Refresh the receipts list
+        fetchReceipts();
+      } else {
+        showError("Failed to delete receipt", result.error);
+      }
+    } catch (error) {
+      console.error("Error deleting receipt:", error);
+      showError("Failed to delete receipt", "Please try again later");
+    } finally {
+      setIsDeleting(false);
+      setDeleteReceipt(null);
+    }
   };
 
   // Fetch receipts when dependencies change
   useEffect(() => {
     fetchReceipts();
-  }, [currentOrganization?.id, currentPage, sortField, sortDirection, filters]);
+  }, [fetchReceipts]);
 
   // Filtered receipts are handled by the API
   const filteredReceipts = receipts;
@@ -569,19 +619,20 @@ export default function ExpensesPage() {
                         <div className="flex items-center justify-end space-x-2">
                           <button
                             onClick={() => setSelectedReceipt(receipt)}
-                            className="p-2 text-text-muted hover:text-accent hover:bg-bg-accent rounded-lg transition-all duration-200"
+                            className="p-2 text-text-muted hover:text-accent hover:bg-bg-accent rounded-lg transition-all duration-200 cursor-pointer"
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            className="p-2 text-text-muted hover:text-text-primary hover:bg-bg-muted rounded-lg transition-all duration-200"
+                            className="p-2 text-text-muted hover:text-text-primary hover:bg-bg-muted rounded-lg transition-all duration-200 cursor-pointer"
                             title="Edit"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            className="p-2 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
+                            onClick={() => setDeleteReceipt(receipt)}
+                            className="p-2 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -694,6 +745,60 @@ export default function ExpensesPage() {
           isOpen={!!selectedReceipt}
           onClose={() => setSelectedReceipt(null)}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteReceipt && (
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Delete Receipt
+              </h3>
+              <p className="text-gray-600 mb-2">
+                Are you sure you want to delete this receipt?
+              </p>
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <p className="text-sm font-medium text-gray-900">
+                  {deleteReceipt.vendor} -{" "}
+                  {formatCurrency(deleteReceipt.totalAmount)}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {formatDate(deleteReceipt.date)} • {deleteReceipt.documentId}
+                </p>
+              </div>
+              <p className="text-sm text-red-600 mb-6">
+                This action cannot be undone.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => handleDeleteReceipt(deleteReceipt.id)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 flex items-center justify-center cursor-pointer"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete"
+                  )}
+                </button>
+                <button
+                  onClick={() => setDeleteReceipt(null)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Toast Container */}

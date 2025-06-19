@@ -146,6 +146,7 @@ model Receipt {
 
   // File information
   fileUrl          String? @map("file_url")
+  fileStoragePath  String? @map("file_storage_path")
   fileOriginalName String? @map("file_original_name")
   fileName         String? @map("file_name")
   fileType         String? @map("file_type")

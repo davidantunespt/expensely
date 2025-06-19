@@ -11,6 +11,7 @@ export interface FileMetadata {
   fileType: string;
   fileSize: number;
   fileHash: string;
+  fileStoragePath: string;
 }
 
 export class FileService {
@@ -44,18 +45,22 @@ export class FileService {
 
       const newfileId = fileId ?? uuidv4();
       // Generate file path and upload to Supabase
-      const filePath = await this.uploadToStorage(
+      const fileData = await this.uploadToStorage(
         organizationId,
         file,
         newfileId
       );
 
       // Get file metadata
-      const fileData = await this.getFileMetadata(file, filePath, newfileId);
+      const fileMetadata = await this.getFileMetadata(
+        file,
+        fileData.path,
+        newfileId
+      );
 
       // Update receipt record with file information
       if (fileId) {
-        await this.updateReceiptFileData(fileId, fileData);
+        await this.updateReceiptFileData(fileId, fileMetadata);
       }
 
       console.log("fileData UPLOADED :robot: ", fileData);
@@ -104,14 +109,14 @@ export class FileService {
     organizationId: string,
     file: File,
     fileId: string
-  ): Promise<string> {
+  ): Promise<{ id: string; path: string; fullPath: string }> {
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}-${Math.random()
       .toString(36)
       .substring(2)}.${fileExt}`;
     const filePath = `${organizationId}/${fileId}/${fileName}`;
 
-    const { error } = await this.supabase.storage
+    const { error, data } = await this.supabase.storage
       .from(BUCKET_NAME)
       .upload(filePath, file, {
         cacheControl: "3600",
@@ -121,7 +126,7 @@ export class FileService {
 
     if (error) throw error;
 
-    return filePath;
+    return data;
   }
 
   /**
@@ -144,6 +149,7 @@ export class FileService {
       fileName: file.name,
       fileType: file.type,
       fileSize: file.size,
+      fileStoragePath: filePath,
       fileHash: await this.calculateFileHash(file),
     };
   }
@@ -160,6 +166,7 @@ export class FileService {
         fileType: fileData.fileType,
         fileSize: fileData.fileSize,
         fileHash: fileData.fileHash,
+        fileStoragePath: fileData.fileStoragePath,
       },
     });
   }
@@ -177,37 +184,26 @@ export class FileService {
   /**
    * Deletes a file from storage and removes file data from receipt
    */
-  async deleteReceiptFile(fileId: string) {
+  async deleteReceiptFile(organizationId: string, fileId: string) {
     try {
       // Get receipt to find file path
       const receipt = await this.prisma.receipt.findUnique({
-        where: { id: fileId },
-        select: { fileUrl: true },
+        where: { id: fileId, organizationId },
+        select: { fileStoragePath: true },
       });
 
-      if (!receipt?.fileUrl) return;
+      if (!receipt?.fileStoragePath) return;
 
       // Extract file path from URL
-      const filePath = receipt.fileUrl.split("/").slice(-3).join("/");
+      const filePath = receipt.fileStoragePath.split("/").slice(-3).join("/");
 
       // Delete from storage
-      const { error } = await this.supabase.storage
+      const { error, data } = await this.supabase.storage
         .from(BUCKET_NAME)
         .remove([filePath]);
 
+      console.log("DELETED data", data);
       if (error) throw error;
-
-      // Clear file data from receipt
-      await this.prisma.receipt.update({
-        where: { id: fileId },
-        data: {
-          fileUrl: null,
-          fileName: null,
-          fileType: null,
-          fileSize: null,
-          fileHash: null,
-        },
-      });
     } catch (error) {
       console.error("File deletion error:", error);
       throw error;
