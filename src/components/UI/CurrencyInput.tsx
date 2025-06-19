@@ -141,10 +141,10 @@ export function CurrencyInput({
         label={label}
         required={required}
         error={error}
-        className="pl-8 pr-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary bg-bg-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent transition-all duration-200"
+        className="pl-8 pr-4 text-right"
       />
       <span 
-        className="absolute left-3 text-text-muted text-sm font-medium pointer-events-none"
+        className="absolute left-3 text-gray-600 text-sm font-medium pointer-events-none"
         style={{ 
           top: label ? 'calc(50% + 14px)' : '50%',
           transform: 'translateY(-50%)'

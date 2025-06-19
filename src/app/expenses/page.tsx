@@ -293,7 +293,7 @@ export default function ExpensesPage() {
                 onChange={(e) =>
                   setFilters({ ...filters, search: e.target.value })
                 }
-                className="w-full pl-10 pr-4 h-12 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 text-text-primary bg-bg-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent"
+                className="w-full pl-10 pr-4 h-12 border border-border-primary rounded-lg focus:outline-none transition-all duration-200 text-text-primary bg-bg-primary "
               />
             </div>
             <Button
@@ -320,7 +320,7 @@ export default function ExpensesPage() {
                     setFilters({ ...filters, category: value })
                   }
                 >
-                  <SelectTrigger className="w-full h-12 px-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary bg-bg-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -339,7 +339,7 @@ export default function ExpensesPage() {
                     setFilters({ ...filters, paymentMethod: value })
                   }
                 >
-                  <SelectTrigger className="w-full h-12 px-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary bg-bg-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select payment method" />
                   </SelectTrigger>
                   <SelectContent>
@@ -368,7 +368,7 @@ export default function ExpensesPage() {
                     })
                   }
                 >
-                  <SelectTrigger className="w-full h-12 px-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary bg-bg-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select tax status" />
                   </SelectTrigger>
                   <SelectContent>

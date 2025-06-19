@@ -96,7 +96,7 @@ export function DatePicker({
         label={label}
         required={required}
         error={error}
-        className="pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary bg-bg-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent transition-all duration-200"
+        className="pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary bg-bg-primary transition-all duration-200"
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         disabled={disabled}

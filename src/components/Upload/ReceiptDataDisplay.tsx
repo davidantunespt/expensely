@@ -5,6 +5,11 @@ import { Edit2, Save, X, CheckCircle, ChevronDown, ChevronUp, Eye } from 'lucide
 import { Box } from '@/components/UI/Box';
 import { ReceiptData } from '@/lib/validations/receipt';
 import { DocumentViewer } from '@/components/UI/DocumentViewer';
+import { Input } from '@/components/UI/input';
+import { SelectWithLabel, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/UI/select';
+import { DateTimeInput } from '@/components/UI/datetime-input';
+import { CurrencyInput } from '@/components/UI/CurrencyInput';
+import { CheckboxWithLabel } from '@/components/UI/checkbox';
 
 interface ProcessedFile {
   fileId: string;
@@ -146,12 +151,7 @@ export function ReceiptDataDisplay({
       .replace('ss', pad(d.getSeconds()));
   }
 
-  function toDatetimeLocal(dt: string) {
-    if (!dt) return '';
-    const d = new Date(dt);
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  }
+
 
   return (
     <div className="relative">
@@ -277,229 +277,129 @@ export function ReceiptDataDisplay({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Vendor */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Vendor Name
-                    </label>
-                    {editingFileId === file.fileId ? (
-                      <input
-                        type="text"
-                        value={file.data.vendor}
-                        onChange={(e) => handleDataUpdate(file.fileId, 'vendor', e.target.value)}
-                        className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
-                        placeholder="Enter vendor name"
-                      />
-                    ) : (
-                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">{file.data.vendor}</div>
-                    )}
+                    <Input
+                      label="Vendor Name"
+                      value={file.data.vendor}
+                      onChange={(e) => handleDataUpdate(file.fileId, 'vendor', e.target.value)}
+                      placeholder="Enter vendor name"
+                      disabled={editingFileId !== file.fileId}
+                    />
                   </div>
 
                   {/* Document ID */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Document ID
-                    </label>
-                    {editingFileId === file.fileId ? (
-                      <input
-                        type="text"
-                        value={file.data.documentId || ''}
-                        onChange={(e) => handleDataUpdate(file.fileId, 'documentId', e.target.value)}
-                        className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
-                        placeholder="Enter document ID"
-                      />
-                    ) : (
-                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">{file.data.documentId || '-'}</div>
-                    )}
+                    <Input
+                      label="Document ID"
+                      value={file.data.documentId || ''}
+                      onChange={(e) => handleDataUpdate(file.fileId, 'documentId', e.target.value)}
+                      placeholder="Enter document ID"
+                      disabled={editingFileId !== file.fileId}
+                    />
                   </div>
 
                   {/* Date */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Date
-                    </label>
-                    {editingFileId === file.fileId ? (
-                      <input
-                        type="datetime-local"
-                        value={toDatetimeLocal(file.data.date)}
-                        onChange={(e) => handleDataUpdate(file.fileId, 'date', e.target.value)}
-                        className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
-                      />
-                    ) : (
-                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">
-                        {formatDateTime(file.data.date)}
-                      </div>
-                    )}
+                    <DateTimeInput
+                      label="Date"
+                      value={file.data.date}
+                      onChange={(value) => handleDataUpdate(file.fileId, 'date', value)}
+                      disabled={editingFileId !== file.fileId}
+                    />
                   </div>
 
                   {/* VAT Numbers */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Issuer VAT Number
-                    </label>
-                    {editingFileId === file.fileId ? (
-                      <input
-                        type="text"
-                        value={file.data.issuerVatNumber || ''}
-                        onChange={(e) => handleDataUpdate(file.fileId, 'issuerVatNumber', e.target.value)}
-                        className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
-                        placeholder="Enter issuer VAT number"
-                      />
-                    ) : (
-                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">{file.data.issuerVatNumber || '-'}</div>
-                    )}
+                    <Input
+                      label="Issuer VAT Number"
+                      value={file.data.issuerVatNumber || ''}
+                      onChange={(e) => handleDataUpdate(file.fileId, 'issuerVatNumber', e.target.value)}
+                      placeholder="Enter issuer VAT number"
+                      disabled={editingFileId !== file.fileId}
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Buyer VAT Number
-                    </label>
                     <div>
-                      <label className="block text-xs text-gray-600 mb-1">Should match your company VAT</label>
-                      {editingFileId === file.fileId ? (
-                        <input
-                          type="text"
-                          value={file.data.buyerVatNumber || ''}
-                          onChange={(e) => handleDataUpdate(file.fileId, 'buyerVatNumber', e.target.value)}
-                          className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white"
-                          placeholder="Enter buyer VAT number"
-                        />
-                      ) : (
-                        <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">{file.data.buyerVatNumber || '-'}</div>
-                      )}
+                      <Input
+                        label="Buyer VAT Number"
+                        value={file.data.buyerVatNumber || ''}
+                        onChange={(e) => handleDataUpdate(file.fileId, 'buyerVatNumber', e.target.value)}
+                        placeholder="Enter buyer VAT number"
+                        disabled={editingFileId !== file.fileId}
+                      />
+                      <label className="block text-xs text-gray-600 mt-1">Should match your company VAT</label>
                     </div>
                   </div>
 
-                  {/* Amounts Group */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Amounts
-                    </label>
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Total Amount</label>
-                        {editingFileId === file.fileId ? (
-                          <div className="relative">
-                            <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-600 text-sm">$</span>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={file.data.totalAmount}
-                              onChange={(e) => handleDataUpdate(file.fileId, 'totalAmount', parseFloat(e.target.value))}
-                              className="w-full pl-6 pr-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white text-right"
-                              placeholder="0.00"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50 text-right">
-                            ${file.data.totalAmount.toFixed(2)}
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Tax Amount</label>
-                        {editingFileId === file.fileId ? (
-                          <div className="relative">
-                            <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-600 text-sm">$</span>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={file.data.totalTax}
-                              onChange={(e) => handleDataUpdate(file.fileId, 'totalTax', parseFloat(e.target.value))}
-                              className="w-full pl-6 pr-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white text-right"
-                              placeholder="0.00"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50 text-right">
-                            ${file.data.totalTax.toFixed(2)}
-                          </div>
-                        )}
-                      </div>
+                      <CurrencyInput
+                        label="Total Amount"
+                        value={file.data.totalAmount}
+                        onChange={(value) => handleDataUpdate(file.fileId, 'totalAmount', value || 0)}
+                        currency="$"
+                        placeholder="0.00"
+                        disabled={editingFileId !== file.fileId}
+                      />
+                      <CurrencyInput
+                        label="Tax Amount"
+                        value={file.data.totalTax}
+                        onChange={(value) => handleDataUpdate(file.fileId, 'totalTax', value || 0)}
+                        currency="$"
+                        placeholder="0.00"
+                        disabled={editingFileId !== file.fileId}
+                      />
                     </div>
                   </div>
 
                   {/* Category */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Category
-                    </label>
-                    {editingFileId === file.fileId ? (
-                      <div className="relative w-full">
-                        <select
-                          value={file.data.category}
-                          onChange={(e) => handleDataUpdate(file.fileId, 'category', e.target.value)}
-                          className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white appearance-none pr-8"
-                        >
-                          {['Meals', 'Travel', 'Gas', 'Office Supplies', 'Software', 'Marketing', 'Utilities', 'Professional Services', 'Equipment', 'Other'].map((category) => (
-                            <option key={category} value={category}>{category}</option>
-                          ))}
-                        </select>
-                        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
-                          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">{file.data.category}</div>
-                    )}
+                    <SelectWithLabel
+                      label="Category"
+                      value={file.data.category}
+                      onValueChange={(value) => handleDataUpdate(file.fileId, 'category', value)}
+                      disabled={editingFileId !== file.fileId}
+                    >
+                      <SelectTrigger className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {['Meals', 'Travel', 'Gas', 'Office Supplies', 'Software', 'Marketing', 'Utilities', 'Professional Services', 'Equipment', 'Other'].map((category) => (
+                          <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </SelectWithLabel>
                   </div>
 
                   {/* Payment Method */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Payment Method
-                    </label>
-                    {editingFileId === file.fileId ? (
-                      <div className="relative w-full">
-                        <select
-                          value={file.data.paymentMethod}
-                          onChange={(e) => handleDataUpdate(file.fileId, 'paymentMethod', e.target.value)}
-                          className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white appearance-none pr-8"
-                        >
-                          {['Credit Card', 'Debit Card', 'Cash', 'Bank Transfer', 'Check', 'Digital Wallet'].map((method) => (
-                            <option key={method} value={method}>{method}</option>
-                          ))}
-                        </select>
-                        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
-                          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-gray-50">{file.data.paymentMethod}</div>
-                    )}
+                    <SelectWithLabel
+                      label="Payment Method"
+                      value={file.data.paymentMethod}
+                      onValueChange={(value) => handleDataUpdate(file.fileId, 'paymentMethod', value)}
+                      disabled={editingFileId !== file.fileId}
+                    >
+                      <SelectTrigger className="w-full px-2 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm leading-none bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {['Credit Card', 'Debit Card', 'Cash', 'Bank Transfer', 'Check', 'Digital Wallet'].map((method) => (
+                          <SelectItem key={method} value={method}>{method}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </SelectWithLabel>
                   </div>
 
                   {/* Tax Deductible - Full Width */}
                   <div className="md:col-span-2 space-y-3">
-                    <label className="block text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                      Tax Status
-                    </label>
-                    <div className="flex items-center space-x-3 p-4 bg-gray-50 border-2 border-gray-100 rounded-lg">
-                      {editingFileId === file.fileId ? (
-                        <input
-                          type="checkbox"
-                          checked={file.data.isDeductible}
-                          onChange={(e) => handleDataUpdate(file.fileId, 'isDeductible', e.target.checked)}
-                          className="w-5 h-5 text-gray-600 border-2 border-gray-300 rounded focus:border-gray-400 focus:ring-0"
-                        />
-                      ) : (
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                          file.data.isDeductible 
-                            ? 'bg-gray-600 border-gray-600' 
-                            : 'bg-white border-gray-300'
-                        }`}>
-                          {file.data.isDeductible && (
-                            <CheckCircle className="w-3 h-3 text-white" />
-                          )}
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <span className="text-gray-900 font-medium text-sm">
-                          This expense is tax deductible
-                        </span>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Check this box if this expense can be claimed as a business deduction
-                        </p>
-                      </div>
-                    </div>
+                    <CheckboxWithLabel
+                      checked={file.data.isDeductible}
+                      onCheckedChange={(checked) => handleDataUpdate(file.fileId, 'isDeductible', checked)}
+                      label="This expense is tax deductible"
+                      disabled={editingFileId !== file.fileId}
+                    >
+                      <p className="text-sm text-gray-600">Check this box if this expense can be claimed as a business deduction.</p>
+                    </CheckboxWithLabel>
                   </div>
 
                   {/* Items List */}
