@@ -184,7 +184,7 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
               {!isCollapsed && (
                 <div className="flex-1 min-w-0">
                   <p className="text-base truncate" style={{ fontWeight: 600 }}>{item.name}</p>
-                  <p className="text-xs text-text-muted truncate">{item.description}</p>
+                  {/* <p className="text-xs text-text-muted truncate">{item.description}</p> */}
                 </div>
               )}
               {!isCollapsed && isActive && (
@@ -220,7 +220,7 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
               {!isCollapsed && (
                 <div className="flex-1 min-w-0">
                   <p className="text-base truncate" style={{ fontWeight: 600 }}>{item.name}</p>
-                  <p className="text-xs text-text-muted truncate">{item.description}</p>
+                  {/* <p className="text-xs text-text-muted truncate">{item.description}</p> */}
                 </div>
               )}
             </Link>

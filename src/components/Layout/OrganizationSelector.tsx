@@ -108,7 +108,7 @@ export function OrganizationSelector() {
                 placeholder="Search organizations..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border-2 border-border-primary rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200"
+                className="w-full pl-10 pr-4 py-3 border-2 border-border-primary rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 text-text-primary bg-bg-primary"
               />
             </div>
           </div>

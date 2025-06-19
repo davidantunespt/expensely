@@ -153,8 +153,8 @@ export function OrganizationManagement({ isOpen, onClose }: OrganizationManageme
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50 p-4">
-      <div className="bg-bg-primary rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-hidden border border-border-primary shadow-xl">
+    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
+      <div className="bg-bg-primary rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden border border-border-primary shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between p-8 border-b border-border-primary bg-bg-secondary">
           <div className="flex items-center space-x-4">
@@ -233,7 +233,7 @@ export function OrganizationManagement({ isOpen, onClose }: OrganizationManageme
                           required
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full px-4 py-3 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 cursor-text"
+                          className="w-full px-4 py-3 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 cursor-text text-text-primary bg-bg-primary"
                           placeholder="Enter organization name"
                         />
                       </div>
@@ -247,7 +247,7 @@ export function OrganizationManagement({ isOpen, onClose }: OrganizationManageme
                           maxLength={2}
                           value={formData.avatar}
                           onChange={(e) => setFormData({ ...formData, avatar: e.target.value.toUpperCase() })}
-                          className="w-full px-4 py-3 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 cursor-text"
+                          className="w-full px-4 py-3 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 cursor-text text-text-primary bg-bg-primary"
                           placeholder="AC"
                         />
                       </div>
@@ -260,7 +260,7 @@ export function OrganizationManagement({ isOpen, onClose }: OrganizationManageme
                       <textarea
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="w-full px-4 py-3 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 cursor-text"
+                        className="w-full px-4 py-3 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 cursor-text text-text-primary bg-bg-primary"
                         placeholder="Brief description of the organization"
                         rows={3}
                       />
@@ -418,7 +418,7 @@ export function OrganizationManagement({ isOpen, onClose }: OrganizationManageme
                           required
                           value={inviteData.email}
                           onChange={(e) => setInviteData({ ...inviteData, email: e.target.value })}
-                          className="w-full px-4 py-3 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 cursor-text"
+                          className="w-full px-4 py-3 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 cursor-text text-text-primary bg-bg-primary"
                           placeholder="member@example.com"
                         />
                       </div>
@@ -430,7 +430,7 @@ export function OrganizationManagement({ isOpen, onClose }: OrganizationManageme
                         <select
                           value={inviteData.role}
                           onChange={(e) => setInviteData({ ...inviteData, role: e.target.value as 'admin' | 'member' })}
-                          className="w-full px-4 py-3 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 cursor-pointer"
+                          className="w-full px-4 py-3 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 cursor-pointer text-text-primary bg-bg-primary"
                         >
                           <option value="member">Member</option>
                           <option value="admin">Admin</option>
@@ -496,7 +496,7 @@ export function OrganizationManagement({ isOpen, onClose }: OrganizationManageme
                         <select
                           value={member.role}
                           onChange={(e) => handleUpdateRole(member.id, e.target.value as 'admin' | 'member')}
-                          className="text-sm border border-border-primary rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent cursor-pointer"
+                          className="text-sm border border-border-primary rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent cursor-pointer text-text-primary bg-bg-primary"
                         >
                           <option value="member">Member</option>
                           <option value="admin">Admin</option>

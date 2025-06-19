@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server";
 import { FileService } from "@/lib/services/FileService";
-import { PrismaClient } from "@/generated/prisma";
-import { rateLimit } from "@/lib/rate-limit";
+import { OrganizationRole, PrismaClient } from "@/generated/prisma";
 import { getUserFromRequest } from "../../../../../lib/utils/request";
 import { type NextRequest } from "next/server";
 import { UnauthorizedError } from "@/lib/errors";
 
 const fileService = new FileService();
 const prisma = new PrismaClient();
-
-// Rate limit: 5 requests per minute per user
-const limiter = rateLimit({
-  interval: 60 * 1000,
-  uniqueTokenPerInterval: 500,
-});
 
 /**
  * Verifies if the user has access to the organization and receipt
@@ -56,12 +49,23 @@ export async function POST(
 ) {
   try {
     const user = getUserFromRequest(req);
+    const organizationId = user.organizationId;
+
+    const receipt = await prisma.receipt.findUnique({
+      where: {
+        id: params.receiptId,
+        organizationId: organizationId,
+      },
+    });
+
+    if (!receipt) {
+      return NextResponse.json({ error: "Receipt not found" }, { status: 404 });
+    }
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const organizationId = formData.get("organizationId") as string;
 
-    if (!file || !organizationId) {
+    if (!file) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -69,7 +73,21 @@ export async function POST(
     }
 
     // Verify user has access to the organization and receipt
-    await verifyAccess(user.id, user.organizationId, params.receiptId);
+    const { membership } = await verifyAccess(
+      user.id,
+      user.organizationId,
+      params.receiptId
+    );
+
+    if (
+      membership.role !== OrganizationRole.OWNER &&
+      membership.role !== OrganizationRole.ADMIN
+    ) {
+      return NextResponse.json(
+        { error: "You do not have access to this receipt" },
+        { status: 403 }
+      );
+    }
 
     const fileData = await fileService.uploadReceiptFile(
       user.organizationId,
@@ -89,60 +107,5 @@ export async function POST(
     }
 
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
-  }
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { receiptId: string } }
-) {
-  try {
-    const user = getUserFromRequest(req);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Apply rate limiting
-    const rateLimitResult = await limiter.check(5, user.id);
-    if (!rateLimitResult.success) {
-      return NextResponse.json(
-        {
-          error: "Too many requests",
-          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
-        },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": Math.ceil(
-              (rateLimitResult.reset - Date.now()) / 1000
-            ).toString(),
-          },
-        }
-      );
-    }
-
-    // Get the receipt to find its organization
-    const receipt = await prisma.receipt.findUnique({
-      where: { id: params.receiptId },
-      select: { organizationId: true },
-    });
-
-    if (!receipt?.organizationId) {
-      return NextResponse.json({ error: "Receipt not found" }, { status: 404 });
-    }
-
-    // Verify user has access to the organization and receipt
-    await verifyAccess(user.id, receipt.organizationId, params.receiptId);
-
-    await fileService.deleteReceiptFile(params.receiptId);
-    return NextResponse.json({ success: true });
-  } catch (error: unknown) {
-    console.error("Delete error:", error);
-
-    if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }

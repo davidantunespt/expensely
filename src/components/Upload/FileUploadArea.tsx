@@ -472,7 +472,7 @@ Network error: ${
                         <div className="flex items-start space-x-3 flex-1 min-w-0">
                           {/* File Preview */}
                           <button
-                            className="w-12 h-12 bg-bg-muted rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden focus:outline-none"
+                            className="w-12 h-12 bg-bg-muted rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden focus:outline-none cursor-pointer"
                             type="button"
                             title="Preview file"
                             onClick={() => {
@@ -668,7 +668,7 @@ Network error: ${
         {/* Image Modal */}
         {viewingImage && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/75 flex items-center justify-center z-50"
             onClick={(e) => {
               // Close modal when clicking the backdrop
               if (e.target === e.currentTarget) {
@@ -679,7 +679,7 @@ Network error: ${
             <div className="relative max-w-4xl max-h-screen w-full h-full flex items-center justify-center p-4">
               <button
                 onClick={() => setViewingImage(null)}
-                className="absolute top-4 right-4 text-white hover:text-gray-300 bg-black bg-opacity-50 rounded-full p-2 cursor-pointer z-10"
+                className="absolute top-4 right-4 text-white hover:text-gray-300 bg-black/75 rounded-full p-2 cursor-pointer z-10"
                 title="Close"
               >
                 <X className="w-6 h-6" />
@@ -692,7 +692,7 @@ Network error: ${
                 unoptimized
                 className="max-w-full max-h-full object-contain rounded-lg"
               />
-              <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-2 rounded">
+              <div className="absolute bottom-4 left-4 bg-black/75 text-white px-3 py-2 rounded">
                 {viewingImage.name}
               </div>
             </div>

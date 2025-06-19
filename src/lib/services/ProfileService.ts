@@ -3,6 +3,7 @@ import { Profile } from "@/generated/prisma";
 
 export type CreateProfileData = {
   id: string; // Supabase auth user ID
+  email: string;
   firstName?: string;
   lastName?: string;
   displayName?: string;
@@ -25,6 +26,7 @@ export class ProfileService {
         firstName: data.firstName,
         lastName: data.lastName,
         displayName: data.displayName || `${data.firstName} ${data.lastName}`,
+        email: data.email,
       },
       select: {
         id: true,

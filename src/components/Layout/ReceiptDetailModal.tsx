@@ -33,8 +33,8 @@ export function ReceiptDetailModal({ receipt, isOpen, onClose }: ReceiptDetailMo
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50 p-4">
-      <div className="bg-bg-primary rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-hidden border border-border-primary shadow-xl">
+    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
+      <div className="bg-bg-primary rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden border border-border-primary shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between p-8 border-b border-border-primary bg-bg-secondary">
           <div className="flex items-center space-x-4">
@@ -238,11 +238,11 @@ export function ReceiptDetailModal({ receipt, isOpen, onClose }: ReceiptDetailMo
                     </div>
                     <div>
                       <div className="text-sm text-text-secondary">Created</div>
-                      <div className="text-sm text-text-primary">{receipt.createdAt.toLocaleDateString()}</div>
+                      <div className="text-sm text-text-primary">{new Date(receipt.createdAt).toLocaleDateString()}</div>
                     </div>
                     <div>
                       <div className="text-sm text-text-secondary">Last Updated</div>
-                      <div className="text-sm text-text-primary">{receipt.updatedAt.toLocaleDateString()}</div>
+                      <div className="text-sm text-text-primary">{new Date(receipt.updatedAt).toLocaleDateString()}</div>
                     </div>
                   </div>
                 </div>

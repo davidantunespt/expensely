@@ -1,4 +1,4 @@
-import { processReceiptFile } from "@/lib/services/ReceiptProcessor";
+import { processReceiptFile } from "@/lib/services/receiptProcessor";
 import { verifyAccess } from "@/lib/utils/access";
 import { getUserFromRequest } from "@/lib/utils/request";
 import { NextRequest, NextResponse } from "next/server";

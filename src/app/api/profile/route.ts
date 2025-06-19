@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       firstName,
       lastName,
       displayName: displayName || `${firstName} ${lastName}`,
+      email: user.email!,
     });
 
     await OrganizationService.createOrganization(user.id, {

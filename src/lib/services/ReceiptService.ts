@@ -44,10 +44,6 @@ export class ReceiptService {
   ): Promise<Receipt> {
     const fileId = uuidv4();
 
-    console.log("organizationId", organizationId);
-    console.log("userId", userId);
-    console.log("data", data);
-
     const createdReceipt = await prisma.receipt.create({
       data: {
         organizationId: organizationId,
