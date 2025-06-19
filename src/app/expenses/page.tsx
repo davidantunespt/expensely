@@ -24,6 +24,7 @@ import { Receipt, ReceiptFilters } from "@/types/receipt";
 import { ReceiptDetailModal } from "@/components/Layout/ReceiptDetailModal";
 import { ExpensesHeader } from "@/components/Expenses/ExpensesHeader";
 import { ToastContainer, useToast } from "@/components/UI/Toast";
+import { DeleteReceiptModal } from "@/components/UI/DeleteReceiptModal";
 
 // API Response Types
 interface ApiResponse {
@@ -46,21 +47,23 @@ interface ApiResponse {
 }
 
 const categories = [
-  "All",
-  "Meals",
-  "Office Supplies",
-  "Transportation",
-  "Utilities",
-  "Marketing",
-  "Travel",
+  { label: "All", value: "All" },
+  { label: "Meals", value: "MEALS" },
+  { label: "Office Supplies", value: "OFFICE_SUPPLIES" },
+  { label: "Transportation", value: "TRANSPORTATION" },
+  { label: "Utilities", value: "UTILITIES" },
+  { label: "Marketing", value: "MARKETING" },
+  { label: "Travel", value: "TRAVEL" },
 ];
+
 const paymentMethods = [
-  "All",
-  "Cash",
-  "Credit Card",
-  "Debit Card",
-  "Bank Transfer",
-  "Check",
+  { label: "All", value: "All" },
+  { label: "Cash", value: "Cash" },
+  { label: "Credit Card", value: "Credit Card" },
+  { label: "Debit Card", value: "Debit Card" },
+  { label: "Digital Wallet", value: "Digital Wallet" },
+  { label: "Bank Transfer", value: "Bank Transfer" },
+  { label: "Check", value: "Check" },
 ];
 
 type SortField = "date" | "vendor" | "amount" | "category";
@@ -98,7 +101,6 @@ export default function ExpensesPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [deleteReceipt, setDeleteReceipt] = useState<Receipt | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [sortField, setSortField] = useState<SortField>("date");
@@ -170,38 +172,10 @@ export default function ExpensesPage() {
     filters.maxAmount,
   ]);
 
-  // Delete receipt function
-  const handleDeleteReceipt = async (receiptId: string) => {
-    if (!currentOrganization?.id) return;
-
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/receipts/${receiptId}`, {
-        method: "DELETE",
-        headers: {
-          "x-organization-id": currentOrganization.id,
-        },
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        showSuccess(
-          "Receipt deleted",
-          "The receipt has been successfully deleted"
-        );
-        // Refresh the receipts list
-        fetchReceipts();
-      } else {
-        showError("Failed to delete receipt", result.error);
-      }
-    } catch (error) {
-      console.error("Error deleting receipt:", error);
-      showError("Failed to delete receipt", "Please try again later");
-    } finally {
-      setIsDeleting(false);
-      setDeleteReceipt(null);
-    }
+  // Handle successful deletion - refresh receipts list
+  const handleReceiptDeleted = () => {
+    setDeleteReceipt(null);
+    fetchReceipts();
   };
 
   // Fetch receipts when dependencies change
@@ -339,8 +313,8 @@ export default function ExpensesPage() {
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19e2c0] focus:border-[#19e2c0] text-text-primary bg-bg-primary"
                   >
                     {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
+                      <option key={category.value} value={category.value}>
+                        {category.label}
                       </option>
                     ))}
                   </select>
@@ -358,8 +332,8 @@ export default function ExpensesPage() {
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19e2c0] focus:border-[#19e2c0] text-text-primary bg-bg-primary"
                   >
                     {paymentMethods.map((method) => (
-                      <option key={method} value={method}>
-                        {method}
+                      <option key={method.value} value={method.value}>
+                        {method.label}
                       </option>
                     ))}
                   </select>
@@ -744,62 +718,17 @@ export default function ExpensesPage() {
           receipt={selectedReceipt}
           isOpen={!!selectedReceipt}
           onClose={() => setSelectedReceipt(null)}
+          onDeleted={fetchReceipts} // Refresh the receipts list after deletion
         />
       )}
 
       {/* Delete Confirmation Modal */}
-      {deleteReceipt && (
-        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="w-8 h-8 text-red-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Delete Receipt
-              </h3>
-              <p className="text-gray-600 mb-2">
-                Are you sure you want to delete this receipt?
-              </p>
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <p className="text-sm font-medium text-gray-900">
-                  {deleteReceipt.vendor} -{" "}
-                  {formatCurrency(deleteReceipt.totalAmount)}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {formatDate(deleteReceipt.date)} • {deleteReceipt.documentId}
-                </p>
-              </div>
-              <p className="text-sm text-red-600 mb-6">
-                This action cannot be undone.
-              </p>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => handleDeleteReceipt(deleteReceipt.id)}
-                  disabled={isDeleting}
-                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 flex items-center justify-center cursor-pointer"
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Deleting...
-                    </>
-                  ) : (
-                    "Delete"
-                  )}
-                </button>
-                <button
-                  onClick={() => setDeleteReceipt(null)}
-                  disabled={isDeleting}
-                  className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteReceiptModal
+        receipt={deleteReceipt}
+        isOpen={!!deleteReceipt}
+        onClose={() => setDeleteReceipt(null)}
+        onDeleted={handleReceiptDeleted}
+      />
 
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onClose={removeToast} />

@@ -166,6 +166,10 @@ export class ReceiptService {
         return false;
       }
 
+      if (receipt.fileStoragePath) {
+        await fileService.deleteReceiptFile(organizationId, receipt.id);
+      }
+
       await prisma.receipt.delete({
         where: {
           id: receiptId,
@@ -173,10 +177,6 @@ export class ReceiptService {
           addedById: userId,
         },
       });
-
-      if (receipt.fileStoragePath) {
-        await fileService.deleteReceiptFile(organizationId, receipt.id);
-      }
 
       return true;
     } catch (error) {

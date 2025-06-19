@@ -1,18 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   X, Calendar, DollarSign, FileText, CreditCard, 
   CheckCircle, XCircle, Download, Edit2, Trash2,
   Receipt as ReceiptIcon
 } from 'lucide-react';
 import { Receipt } from '@/types/receipt';
+import { DeleteReceiptModal } from '@/components/UI/DeleteReceiptModal';
 
 interface ReceiptDetailModalProps {
   receipt: Receipt;
   isOpen: boolean;
   onClose: () => void;
+  onDeleted?: () => void; // Optional callback when receipt is deleted
 }
 
-export function ReceiptDetailModal({ receipt, isOpen, onClose }: ReceiptDetailModalProps) {
+export function ReceiptDetailModal({ receipt, isOpen, onClose, onDeleted }: ReceiptDetailModalProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Handle successful deletion
+  const handleReceiptDeleted = () => {
+    setShowDeleteConfirm(false);
+    onClose();
+    if (onDeleted) onDeleted();
+  };
+
   if (!isOpen) return null;
 
   const formatCurrency = (amount: number) => {
@@ -55,7 +66,10 @@ export function ReceiptDetailModal({ receipt, isOpen, onClose }: ReceiptDetailMo
               <Edit2 className="w-4 h-4" />
               <span>Edit</span>
             </button>
-            <button className="flex items-center space-x-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer">
+            <button 
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center space-x-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
+            >
               <Trash2 className="w-4 h-4" />
               <span>Delete</span>
             </button>
@@ -251,6 +265,14 @@ export function ReceiptDetailModal({ receipt, isOpen, onClose }: ReceiptDetailMo
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteReceiptModal
+        receipt={showDeleteConfirm ? receipt : null}
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onDeleted={handleReceiptDeleted}
+      />
     </div>
   );
 }
