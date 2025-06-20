@@ -44,7 +44,7 @@ export const Toast: React.FC<ToastProps> = ({
   };
 
   const baseClasses = `
-    fixed top-4 right-4 z-50 max-w-sm w-full bg-white rounded-lg shadow-lg border
+    fixed top-4 right-4 z-100 max-w-sm w-full bg-white rounded-lg shadow-lg border
     transform transition-all duration-300 ease-in-out
     ${isVisible && !isLeaving 
       ? 'translate-x-0 opacity-100 scale-100' 
@@ -65,7 +65,7 @@ export const Toast: React.FC<ToastProps> = ({
   const Icon = type === 'success' ? CheckCircle : XCircle;
 
   return (
-    <div className={`${baseClasses} ${typeClasses[type]}`}>
+    <div className={`${baseClasses} ${typeClasses[type]} pointer-events-auto`}>
       <div className="p-4">
         <div className="flex items-start">
           <div className="flex-shrink-0">
@@ -100,7 +100,7 @@ export interface ToastContainerProps {
 
 export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onClose }) => {
   return (
-    <div className="fixed top-0 right-0 z-50 p-4 space-y-4">
+    <div className="fixed top-0 right-0 z-[100] p-4 space-y-4 pointer-events-none">
       {toasts.map((toast) => (
         <Toast key={toast.id} {...toast} onClose={onClose} />
       ))}

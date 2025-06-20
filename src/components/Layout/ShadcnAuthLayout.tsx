@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { ShadcnSidebar } from './ShadcnSidebar'
 import { Header } from './Header'
 import { OrganizationManagement } from './OrganizationManagement'
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { SidebarProvider } from '@/components/ui/sidebar'
 
 interface ShadcnAuthLayoutProps {
   children: React.ReactNode
