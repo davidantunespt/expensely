@@ -298,14 +298,14 @@ export function ReceiptDataDisplay({
                   </div>
 
                   {/* Date */}
-                  <div className="space-y-2">
+
                     <DateTimeInput
                       label="Date"
                       value={file.data.date}
                       onChange={(value) => handleDataUpdate(file.fileId, 'date', value)}
                       disabled={editingFileId !== file.fileId}
                     />
-                  </div>
+
 
                   {/* VAT Numbers */}
                   <div className="space-y-2">

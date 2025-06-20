@@ -95,7 +95,7 @@ export function DateTimeInput({
                 variant="outline"
                 disabled={disabled}
                 className={cn(
-                  "w-full h-9 px-3 py-2 justify-between items-center font-normal border-2 border-gray-200 rounded-lg text-gray-900 text-sm bg-white hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:border-gray-400 transition-colors",
+                  "w-full h-9 px-3 justify-between items-center font-normal border-2 border-gray-200 rounded-lg text-gray-900 text-sm bg-white hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:border-gray-400 transition-colors",
                   !currentDate && "text-muted-foreground",
                   error && "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500",
                   disabled && "opacity-50 cursor-not-allowed bg-gray-50 hover:bg-gray-50"
@@ -128,7 +128,7 @@ export function DateTimeInput({
              onChange={handleTimeChange}
              disabled={disabled}
              className={cn(
-               "h-9 px-3 py-2 border-2 border-gray-200 rounded-lg text-gray-900 text-sm bg-white hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:border-gray-400 appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none transition-colors",
+               "h-9 px-3 border-2 border-gray-200 rounded-lg text-gray-900 text-sm bg-white hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:border-gray-400 appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none transition-colors",
                error && "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500"
              )}
            />

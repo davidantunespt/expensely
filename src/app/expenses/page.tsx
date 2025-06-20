@@ -252,8 +252,8 @@ export default function ExpensesPage() {
     return (
       <div className="flex-1 flex items-center justify-center bg-bg-secondary">
         <div className="text-center">
-          <ReceiptIcon className="w-16 h-16 text-secondary-200 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-text-primary">
+          <ReceiptIcon className="w-12 h-12 text-text-muted mb-4 mx-auto" />
+          <h3 className="text-xl font-semibold text-gray-800 mb-3">
             No Organization Selected
           </h3>
           <p className="text-text-secondary">
@@ -361,10 +361,7 @@ export default function ExpensesPage() {
                   onValueChange={(value) =>
                     setFilters({
                       ...filters,
-                      isDeductible:
-                        value === "All"
-                          ? null
-                          : value === "true",
+                      isDeductible: value === "All" ? null : value === "true",
                     })
                   }
                 >
@@ -380,11 +377,13 @@ export default function ExpensesPage() {
 
                 <DatePicker
                   label="Date From"
-                  value={filters.dateFrom ? new Date(filters.dateFrom) : undefined}
+                  value={
+                    filters.dateFrom ? new Date(filters.dateFrom) : undefined
+                  }
                   onChange={(date) =>
-                    setFilters({ 
-                      ...filters, 
-                      dateFrom: date ? date.toISOString().split('T')[0] : "" 
+                    setFilters({
+                      ...filters,
+                      dateFrom: date ? date.toISOString().split("T")[0] : "",
                     })
                   }
                   placeholder="Select start date"
@@ -396,9 +395,9 @@ export default function ExpensesPage() {
                   label="Date To"
                   value={filters.dateTo ? new Date(filters.dateTo) : undefined}
                   onChange={(date) =>
-                    setFilters({ 
-                      ...filters, 
-                      dateTo: date ? date.toISOString().split('T')[0] : "" 
+                    setFilters({
+                      ...filters,
+                      dateTo: date ? date.toISOString().split("T")[0] : "",
                     })
                   }
                   placeholder="Select end date"

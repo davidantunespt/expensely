@@ -82,10 +82,10 @@
   --color-success-green: #2ba02b;
 
   /* Background Colors */
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f5f7fa;
+  --color-bg-primary: white;
+  --color-bg-secondary: white;
   --color-bg-tertiary: #f8fafc;
-  --color-bg-accent: #e0f7fa;
+  --color-bg-accent: #red;
   --color-bg-muted: #f1f5f9;
 
   /* Text Colors */

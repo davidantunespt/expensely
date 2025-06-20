@@ -44,14 +44,7 @@ export function ShadcnAuthLayout({ children }: ShadcnAuthLayoutProps) {
       <ShadcnSidebar onOpenOrgManagement={() => setIsOrgManagementOpen(true)} />
       <main className="flex flex-col flex-1 min-h-screen">
         {/* Header with sidebar trigger */}
-        <div className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex items-center px-6 py-3">
-            <SidebarTrigger className="mr-4" />
-            <div className="flex-1">
-              <Header />
-            </div>
-          </div>
-        </div>
+        <Header />
         
         {/* Main content area */}
         <div className="flex-1 overflow-y-auto">

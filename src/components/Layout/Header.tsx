@@ -8,7 +8,7 @@ export function Header() {
   const { currentOrganization } = useOrganization();
 
   return (
-    <header className="w-full bg-bg-primary border-b border-border-primary z-30">
+    <header className="bg-bg-primary border-b border-border-primary z-30">
       {/* Main header row */}
       <div className="max-w-7xl mx-auto flex items-center justify-between px-8 py-4">
         {/* App logo/name */}
@@ -36,7 +36,7 @@ export function Header() {
 
       {/* Info bar below header */}
       {currentOrganization && (
-        <div className="w-full bg-bg-muted border-t border-border-primary">
+        <div className="bg-bg-muted border-t border-border-primary">
           <div className="max-w-7xl mx-auto px-8 py-2 flex items-center text-sm text-text-secondary">
             <span>
               Currently viewing data for <span className="font-semibold text-text-primary">{currentOrganization.name}</span>
