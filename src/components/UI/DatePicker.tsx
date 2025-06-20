@@ -3,14 +3,14 @@
 import * as React from "react";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/UI/Button";
-import { Calendar } from "@/components/UI/calendar";
-import { Input } from "@/components/UI/input";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/UI/popover";
+} from "@/components/ui/popover";
 
 interface DatePickerProps {
   value?: Date;

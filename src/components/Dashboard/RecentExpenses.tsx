@@ -11,7 +11,7 @@ import {
   FileText,
   FolderOpen
 } from 'lucide-react';
-import { Box } from '@/components/UI/Box';
+import { Box } from '@/components/ui/Box';
 
 interface RecentExpensesProps {
   expenses: Expense[];

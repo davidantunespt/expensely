@@ -3,7 +3,7 @@
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
 import { CheckIcon } from "lucide-react"
-import { Label } from "@/components/UI/label"
+import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 
 function Checkbox({
@@ -14,7 +14,7 @@ function Checkbox({
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer h-5 w-5 rounded-sm border-2 border-gray-200 bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-gray-600 data-[state=checked]:border-gray-600 data-[state=checked]:text-white transition-colors",
+        "peer h-5 w-5 rounded-sm border-2 border-gray-200 bg-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-gray-600 data-[state=checked]:border-gray-600 data-[state=checked]:text-white transition-colors",
         className
       )}
       {...props}

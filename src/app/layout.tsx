@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { AuthLayout } from "@/components/Layout/AuthLayout";
+import { ShadcnAuthLayout } from "@/components/Layout/ShadcnAuthLayout";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
 
 const geistSans = Geist({
@@ -32,9 +32,9 @@ export default function RootLayout({
       >
         <AuthProvider>
           <OrganizationProvider>
-            <AuthLayout>
+            <ShadcnAuthLayout>
               {children}
-            </AuthLayout>
+            </ShadcnAuthLayout>
           </OrganizationProvider>
         </AuthProvider>
       </body>

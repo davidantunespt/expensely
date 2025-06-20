@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { Button } from '@/components/UI/Button'
+import { Button } from '@/components/ui/button'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')

@@ -5,7 +5,7 @@ import {
   Receipt as ReceiptIcon
 } from 'lucide-react';
 import { Receipt } from '@/types/receipt';
-import { DeleteReceiptModal } from '@/components/UI/DeleteReceiptModal';
+import { DeleteReceiptModal } from '@/components/ui/DeleteReceiptModal';
 
 interface ReceiptDetailModalProps {
   receipt: Receipt;

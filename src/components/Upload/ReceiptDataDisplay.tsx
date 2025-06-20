@@ -2,14 +2,14 @@
 
 import React, { useState } from 'react';
 import { Edit2, Save, X, CheckCircle, ChevronDown, ChevronUp, Eye } from 'lucide-react';
-import { Box } from '@/components/UI/Box';
+import { Box } from '@/components/ui/Box';
 import { ReceiptData } from '@/lib/validations/receipt';
-import { DocumentViewer } from '@/components/UI/DocumentViewer';
-import { Input } from '@/components/UI/input';
-import { SelectWithLabel, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/UI/select';
-import { DateTimeInput } from '@/components/UI/datetime-input';
-import { CurrencyInput } from '@/components/UI/CurrencyInput';
-import { CheckboxWithLabel } from '@/components/UI/checkbox';
+import { DocumentViewer } from '@/components/ui/DocumentViewer';
+import { Input } from '@/components/ui/input';
+import { SelectWithLabel, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
+import { DateTimeInput } from '@/components/ui/datetime-input';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { CheckboxWithLabel } from '@/components/ui/checkbox';
 
 interface ProcessedFile {
   fileId: string;

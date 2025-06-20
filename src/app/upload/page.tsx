@@ -6,7 +6,7 @@ import { FileUploadArea, FileUploadAreaRef } from '@/components/Upload/FileUploa
 import { ReceiptDataDisplay } from '@/components/Upload/ReceiptDataDisplay';
 import { ReceiptData } from '@/lib/validations/receipt';
 import { useOrganization } from '@/contexts/OrganizationContext';
-import { ToastContainer, useToast } from '@/components/UI/Toast';
+import { ToastContainer, useToast } from '@/components/ui/Toast';
 
 interface ProcessedFile {
   fileId: string;

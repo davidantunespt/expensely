@@ -18,7 +18,7 @@ import {
   Brain,
   QrCode,
 } from "lucide-react";
-import { Button } from "@/components/UI/Button";
+import { Button } from "@/components/ui/button";
 import { ReceiptData } from "@/lib/validations/receipt";
 import { useOrganization } from "@/contexts/OrganizationContext";
 

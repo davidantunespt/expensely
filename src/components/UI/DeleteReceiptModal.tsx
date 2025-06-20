@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Trash2, Loader2 } from 'lucide-react';
 import { Receipt } from '@/types/receipt';
 import { useOrganization } from '@/contexts/OrganizationContext';
-import { useToast } from '@/components/UI/Toast';
+import { useToast } from '@/components/ui/Toast';
 
 interface DeleteReceiptModalProps {
   receipt: Receipt | null;

@@ -23,19 +23,19 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { Receipt, ReceiptFilters } from "@/types/receipt";
 import { ReceiptDetailModal } from "@/components/Layout/ReceiptDetailModal";
 import { ExpensesHeader } from "@/components/Expenses/ExpensesHeader";
-import { ToastContainer, useToast } from "@/components/UI/Toast";
-import { DeleteReceiptModal } from "@/components/UI/DeleteReceiptModal";
-import { Input } from "@/components/UI/input";
+import { ToastContainer, useToast } from "@/components/ui/Toast";
+import { DeleteReceiptModal } from "@/components/ui/DeleteReceiptModal";
+import { Input } from "@/components/ui/input";
 import {
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
   SelectWithLabel,
-} from "@/components/UI/select";
-import { DatePicker } from "@/components/UI/DatePicker";
-import { CurrencyInput } from "@/components/UI/CurrencyInput";
-import { Button } from "@/components/UI/Button";
+} from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { CurrencyInput } from "@/components/ui/CurrencyInput";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 // API Response Types

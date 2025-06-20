@@ -153,12 +153,12 @@ export function OrganizationManagement({ isOpen, onClose }: OrganizationManageme
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
-      <div className="bg-bg-primary rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden border border-border-primary shadow-xl">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+      <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden border border-gray-200 shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-8 border-b border-border-primary bg-bg-secondary">
+        <div className="flex items-center justify-between p-8 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center space-x-4">
-            <h2 className="text-3xl font-bold text-text-primary">Organization Management</h2>
+            <h2 className="text-3xl font-bold text-gray-900">Organization Management</h2>
             {currentOrganization && (
               <div className="flex items-center space-x-3">
                 <div
@@ -167,20 +167,20 @@ export function OrganizationManagement({ isOpen, onClose }: OrganizationManageme
                 >
                   {currentOrganization.avatar || currentOrganization.name.charAt(0)}
                 </div>
-                <span className="text-text-primary font-medium">{currentOrganization.name}</span>
+                <span className="text-gray-900 font-medium">{currentOrganization.name}</span>
               </div>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-3 hover:bg-bg-muted rounded-xl transition-all duration-200 cursor-pointer"
+            className="p-3 hover:bg-gray-100 rounded-xl transition-all duration-200 cursor-pointer"
           >
-            <X className="w-6 h-6 text-text-muted" />
+            <X className="w-6 h-6 text-gray-500" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-border-primary bg-bg-secondary">
+        <div className="border-b border-gray-200 bg-gray-50">
           <nav className="flex space-x-8 px-8">
             {[
               { id: 'organizations', label: 'Organizations', icon: Users },
@@ -194,8 +194,8 @@ export function OrganizationManagement({ isOpen, onClose }: OrganizationManageme
                   onClick={() => setActiveTab(tab.id as TabType)}
                   className={`flex items-center space-x-3 py-4 px-2 border-b-2 font-semibold text-sm transition-all duration-200 cursor-pointer ${
                     activeTab === tab.id
-                      ? 'border-accent text-accent'
-                      : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-secondary'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
